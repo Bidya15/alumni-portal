@@ -1,0 +1,246 @@
+/* AlumniDashboard: Modern & Professional Styles */
+
+.dashboardWrapper {
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: transparent;
+}
+
+.dashboardContent {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+}
+
+.mainCol {
+    flex: 1;
+    min-width: 0;
+    /* Prevent overflow */
+}
+
+.sideCol {
+    width: 380px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 32px;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid var(--border-lt);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sideCta {
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--gray-50);
+    border-radius: 12px;
+    color: var(--indigo);
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px dashed var(--border);
+}
+
+.sideCta:hover {
+    background: var(--indigo-lt);
+    color: var(--indigo);
+    border-style: solid;
+}
+
+/* ─── Welcome Header ───────────────────────────────────── */
+.welcomeHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Balanced look */
+    margin-bottom: 40px;
+}
+
+.welcomeText {
+    flex: 1;
+}
+
+.greeting {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--gray-800);
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+}
+
+.userName {
+    color: var(--indigo);
+}
+
+.userRoleLine {
+    font-size: 16px;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.profileBtn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.profileBtn:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-md);
+}
+
+/* ─── Metrics Bar ──────────────────────────────────────── */
+.metricsBar {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-lt);
+}
+
+.metricItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metricLabel {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    letter-spacing: 0.05em;
+}
+
+.metricValue {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-700);
+}
+
+.metricDivider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-lt);
+}
+
+.statusActive {
+    color: #10b981;
+}
+
+/* ─── Features Grid ────────────────────────────────────── */
+.featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.featureCard {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-lt);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+    box-shadow: var(--shadow-sm);
+}
+
+.featureCard:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-lg);
+}
+
+.featureTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 10px;
+}
+
+.featureDesc {
+    font-size: 14px;
+    color: var(--gray-500);
+    line-height: 1.5;
+    margin-bottom: 20px;
+    flex: 1;
+}
+
+.featureAction {
+    background: transparent;
+    border: none;
+    color: var(--indigo);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.featureAction:hover {
+    text-decoration: underline;
+    transform: translateX(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+    .dashboardContent {
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .sideCol {
+        width: 100%;
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboardWrapper {
+        padding: 20px;
+    }
+
+    .welcomeHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .metricsBar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .metricDivider {
+        display: none;
+    }
+
+    .featuresGrid {
+        grid-template-columns: 1fr;
+    }
+}
