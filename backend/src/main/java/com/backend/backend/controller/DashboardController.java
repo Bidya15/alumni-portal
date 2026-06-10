@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
@@ -45,6 +46,14 @@ public class DashboardController {
                 stats.put("pendingAlumni",
                                 allUsers.stream().filter(u -> u.getRole() == User.Role.ROLE_ALUMNI
                                                 && u.getStatus() == User.Status.PENDING).count());
+
+                LocalDateTime activeCutoff = LocalDateTime.now().minusDays(30);
+                stats.put("monthlyActiveUsers",
+                                allUsers.stream()
+                                                .filter(u -> u.getStatus() == User.Status.APPROVED)
+                                                .filter(u -> u.getLastLoginAt() != null
+                                                                && u.getLastLoginAt().isAfter(activeCutoff))
+                                                .count());
                 
                 if (isSuper) {
                     stats.put("totalAdmins",
@@ -97,6 +106,8 @@ public class DashboardController {
                                 .limit(5)
                                 .collect(Collectors.toList());
                 stats.put("recentUsers", recentUsers);
+                stats.put("recentRegistrations", recentUsers);
+                stats.put("recentRegistrationsCount", recentUsers.size());
 
                 return ResponseEntity.ok(stats);
         }

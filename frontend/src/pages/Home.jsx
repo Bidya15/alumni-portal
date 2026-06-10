@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView, useMotionValue, useAnimationFrame, animate } from "framer-motion";
-import { useApp } from "../context/AppContext";
+import { useApp, DEPARTMENTS } from "../context/AppContext";
 import PublicNav from "../components/PublicNav";
 import Footer from "../components/Footer";
 import EventsPanel from "../components/EventsPanel";
@@ -269,16 +269,45 @@ function HeroSlider() {
     );
 }
 
+/* ── Demo Credentials ─────────────────────────────────────── */
+const DEMO = {
+    ALUMNI: [
+        { email: "alumni@aec.ac.in", pass: "password", branch: "Computer Science & Engineering" }
+    ],
+    ADMIN: [
+        { email: "cse@aec.ac.in", pass: "password", branch: "Computer Science & Engineering" }
+    ],
+    SUPER_ADMIN: [
+        { email: "superadmin@college.edu", pass: "SuperAdmin@123", branch: "" }
+    ]
+};
+
 /* ── Inline Login Panel ───────────────────────────────────── */
 function LoginPanel({ onClose }) {
-    function submit(e) {
-        e.preventDefault();
-        setErr(""); setBusy(true);
-        const res = login({ email: email.trim(), password: pass, role });
-        setBusy(false);
-        if (!res.ok) setErr(res.error);
-    }
+    const { login, setPage } = useApp();
+    const [email, setEmail] = useState("");
+    const [pass, setPass] = useState("");
+    const [branch, setBranch] = useState("");
+    const [role, setRole] = useState("ALUMNI");
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
 
+    async function submit(e) {
+        e.preventDefault();
+        if (role !== "SUPER_ADMIN" && !branch) return setErr("Please choose a branch/department");
+        setErr(""); setBusy(true);
+        const res = await login(email.trim(), pass, role === "SUPER_ADMIN" ? "" : branch);
+        setBusy(false);
+        if (res.ok) {
+            if (res.otpRequired) {
+                setPage("LOGIN");
+            } else {
+                onClose();
+            }
+        } else {
+            setErr(res.error || "Login failed");
+        }
+    }
 
     return (
         <motion.div
@@ -299,14 +328,14 @@ function LoginPanel({ onClose }) {
             <div className={styles.panelTitle}>Welcome back 👋</div>
 
             <div className={styles.roleTabs}>
-                {["ALUMNI", "STUDENT", "ADMIN"].map(r => (
+                {["ALUMNI", "ADMIN", "SUPER_ADMIN"].map(r => (
                     <motion.button
                         key={r}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => { setRole(r); setErr(""); }}
                         className={`${styles.roleTabBtn}${role === r ? ` ${styles.active}` : ""}`}
                     >
-                        {r === "ALUMNI" ? "🎓 Alumni" : r === "STUDENT" ? "📚 Student" : "⚙️ Admin"}
+                        {r === "ALUMNI" ? "🎓 Alumni" : r === "ADMIN" ? "⚙️ Dept Admin" : "🛡️ Super Admin"}
                     </motion.button>
                 ))}
             </div>
@@ -323,6 +352,22 @@ function LoginPanel({ onClose }) {
             </AnimatePresence>
 
             <form onSubmit={submit}>
+                {role !== "SUPER_ADMIN" && (
+                    <div className={styles.inputGroup}>
+                        <label className={styles.inputLabel}>Branch / Department</label>
+                        <select
+                            className={styles.inputField}
+                            value={branch}
+                            onChange={e => setBranch(e.target.value)}
+                            required
+                        >
+                            <option value="">Choose Branch *</option>
+                            {DEPARTMENTS.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
                 <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Email</label>
                     <input
@@ -357,10 +402,10 @@ function LoginPanel({ onClose }) {
             </form>
 
             <div className={styles.demoBlock}>
-                {DEMO[role].map(d => (
+                {DEMO[role] && DEMO[role].map(d => (
                     <div
                         key={d.email}
-                        onClick={() => { setEmail(d.email); setPass(d.pass); }}
+                        onClick={() => { setEmail(d.email); setPass(d.pass); setBranch(d.branch || ""); }}
                         className={styles.demoEmailRow}
                     >
                         📧 {d.email} <span className={styles.dimText}>(click to fill)</span>
@@ -894,7 +939,6 @@ export default function Home() {
 
     const [stats, setStats] = useState([]);
     const [statsLoading, setStatsLoading] = useState(true);
-    const [showFullDirectory, setShowFullDirectory] = useState(false);
 
     useEffect(() => {
         loadStats();
@@ -904,9 +948,15 @@ export default function Home() {
         setStatsLoading(true);
         try {
             const res = await api.get("/cms/stats/dynamic");
-            setStats(res.data);
+            if (Array.isArray(res.data)) {
+                setStats(res.data);
+            } else {
+                console.error("Stats API returned non-array data:", res.data);
+                setStats([]);
+            }
         } catch (e) {
             console.error("Failed to fetch stats", e);
+            setStats([]);
         } finally {
             setStatsLoading(false);
         }
@@ -1031,7 +1081,7 @@ export default function Home() {
                                 >
                                     Welcome to the official alumni network of Assam Engineering College.
                                     Established in 1955, AEC has a rich legacy of producing world-class engineers.
-                                    Reconnect with your batchmates, discover exciting opportunities, and give back to your alma mater.
+                                    Reconnect with your batchmates, discover exciting opportunities, and support your alma mater.
                                 </motion.p>
 
                                 <motion.div variants={fadeUp} transition={{ duration: 0.7 }} className={styles.heroActions}>
@@ -1076,7 +1126,7 @@ export default function Home() {
 
             {/* ── Stats Bar ── */}
             <AnimatePresence>
-                {!authPanel && (statsLoading || stats.length > 0) && (
+                {!authPanel && (statsLoading || (Array.isArray(stats) && stats.length > 0)) && (
                     <div style={{ position: 'relative', width: '100%' }}>
                         <div className={styles.heroStats} style={{ opacity: 1 }}>
                             {statsLoading ? (
@@ -1087,7 +1137,7 @@ export default function Home() {
                                     </div>
                                 ))
                             ) : (
-                                stats.map((s, idx) => (
+                                Array.isArray(stats) && stats.map((s, idx) => (
                                     <motion.div
                                         key={s.id || s.label}
                                         className={styles.statItem}
@@ -1230,27 +1280,6 @@ export default function Home() {
                         />
                     )}
 
-                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                        <button
-                            className={styles.directoryBtn}
-                            onClick={() => setShowFullDirectory(!showFullDirectory)}
-                        >
-                            {showFullDirectory ? "Close Alumni List ↑" : "View All Alumni Directory ↓"}
-                        </button>
-                    </div>
-
-                    <AnimatePresence>
-                        {showFullDirectory && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className={styles.expandableListWrap}
-                            >
-                                <ExpandableAlumniList />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
 
                     {isSuper && !cmsLoading && (
                         <div style={{ textAlign: 'center', marginTop: '24px' }}>
@@ -1418,106 +1447,3 @@ export default function Home() {
     );
 }
 
-/* ─── Expandable Full Alumni List ─── */
-function ExpandableAlumniList() {
-    const [alumni, setAlumni] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({ q: "", batch: "", branch: "" });
-
-    useEffect(() => {
-        fetchAlumni();
-    }, []);
-
-    async function fetchAlumni() {
-        setLoading(true);
-        try {
-            const res = await api.get("/alumni/public");
-            setAlumni(res.data);
-        } catch (e) {
-            console.error("Failed to fetch public alumni", e);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const branches = [...new Set(alumni.filter(a => a.degree).map(a => a.degree))].sort();
-    const batches = [...new Set(alumni.filter(a => a.batch).map(a => a.batch))].sort((a, b) => b - a);
-
-    const filtered = alumni.filter(a => {
-        const matchesQ = !filters.q ||
-            a.name.toLowerCase().includes(filters.q.toLowerCase()) ||
-            (a.company && a.company.toLowerCase().includes(filters.q.toLowerCase())) ||
-            (a.designation && a.designation.toLowerCase().includes(filters.q.toLowerCase()));
-        const matchesBatch = !filters.batch || String(a.batch) === filters.batch;
-        const matchesBranch = !filters.branch || a.degree === filters.branch;
-        return matchesQ && matchesBatch && matchesBranch;
-    });
-
-    return (
-        <div className={styles.directoryInner}>
-            <div className={styles.directoryFilters}>
-                <div className={styles.searchBox}>
-                    <span className={styles.searchIcon}>🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Search by name, company, or designation..."
-                        value={filters.q}
-                        onChange={e => setFilters({ ...filters, q: e.target.value })}
-                    />
-                </div>
-                <div className={styles.selectGroup}>
-                    <select value={filters.batch} onChange={e => setFilters({ ...filters, batch: e.target.value })}>
-                        <option value="">All Batches</option>
-                        {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
-                    <select value={filters.branch} onChange={e => setFilters({ ...filters, branch: e.target.value })}>
-                        <option value="">All Branches</option>
-                        {branches.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
-                </div>
-            </div>
-
-            {loading ? (
-                <div className={styles.directoryLoading}>Loading network details...</div>
-            ) : filtered.length === 0 ? (
-                <div className={styles.directoryEmpty}>No alumni found matching those search criteria.</div>
-            ) : (
-                <div className={styles.directoryTableScroll}>
-                    <table className={styles.directoryTable}>
-                        <thead>
-                            <tr>
-                                <th>Alumni Name</th>
-                                <th>Batch</th>
-                                <th>Branch</th>
-                                <th>Current Occupation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filtered.map(a => (
-                                <tr key={a.id}>
-                                    <td>
-                                        <div className={styles.alumniCell}>
-                                            <div className={styles.miniAvatar}>{a.name.charAt(0)}</div>
-                                            <span>{a.name}</span>
-                                        </div>
-                                    </td>
-                                    <td>{a.batch}</td>
-                                    <td>{a.degree}</td>
-                                    <td>
-                                        <div className={styles.workCell}>
-                                            <span className={styles.designation}>{a.designation || "Graduate"}</span>
-                                            {a.company && <span className={styles.company}> @ {a.company}</span>}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-            <div className={styles.directoryFooter}>
-                Found {filtered.length} alumni in our global network.
-            </div>
-        </div>
-    );
-}

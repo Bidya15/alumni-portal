@@ -1,4 +1,5 @@
 package com.backend.backend.config;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.backend.backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/cms/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .requestMatchers("/api/events/**", "/api/coordinators/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN")
                         .requestMatchers("/api/testimonials/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ALUMNI")
-                        .requestMatchers("/api/notifications/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/notifications/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_ALUMNI")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -95,10 +96,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Value("${allowed.origins:http://localhost:5173,http://localhost:5174}")
+    private String allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174")); // Vite ports
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

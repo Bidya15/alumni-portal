@@ -41,17 +41,45 @@ public class AuthController {
     public ResponseEntity<AuthResponse> verifyLogin(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String otp = request.get("otp");
-        return ResponseEntity.ok(authService.completeLogin(email, otp));
+        String department = request.get("department");
+        return ResponseEntity.ok(authService.completeLogin(email, otp, department));
     }
 
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> request) {
         String idToken = request.get("idToken");
-        return googleAuthService.verifyAndGetUser(idToken)
-                .map(user -> ResponseEntity.ok(authService.generateAuthResponse(user)))
+        String department = authService.normalizeDept(request.get("department"));
+        return googleAuthService.verifyAndGetUser(idToken, department)
+                .map(user -> {
+                    if (user.getStatus() != com.backend.backend.model.User.Status.APPROVED) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of("message", "Your account is pending approval or has been suspended by the administrators."));
+                    }
+                    if (user.getRole() != com.backend.backend.model.User.Role.ROLE_SUPER_ADMIN) {
+                        if (department == null || department.trim().isEmpty()) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                    .body(Map.of("message", "Please select your branch."));
+                        }
+                        if (!authService.sameDept(user.getDepartment(), department)) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                    .body(Map.of("message", "Choose correct department"));
+                        }
+                    }
+                    return ResponseEntity.ok(authService.generateAuthResponse(user, true));
+                })
                 .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
+    @Deprecated
+    /*
+    private ResponseEntity<?> oldGoogleLoginPlaceholder(Map<String, String> request) {
+        String idToken = request.get("idToken");
+        return googleAuthService.verifyAndGetUser(idToken)
+                .map(user -> ResponseEntity.ok(authService.generateAuthResponse(user, true)))
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    */
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Principal principal) {
         if (principal == null)

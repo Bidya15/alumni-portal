@@ -25,7 +25,10 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private User.Role targetRole;
 
+    private Long targetUserId;
+
     private Long relatedEntityId;
+    private String department;
 
     @Builder.Default
     private boolean read = false;
@@ -38,6 +41,9 @@ public class Notification {
     }
 
     public enum Type {
-        REGISTRATION_APPROVAL
+        REGISTRATION_APPROVAL,
+        CONNECTION_REQUEST,
+        CONNECTION_ACCEPTED,
+        CONNECTION_REJECTED
     }
 }

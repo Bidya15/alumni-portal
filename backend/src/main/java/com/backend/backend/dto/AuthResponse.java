@@ -13,6 +13,7 @@ public class AuthResponse {
     private String email;
     private String role;
     private String status;
+    private String department;
 
     // Professional & Profile Info
     private Integer batch;

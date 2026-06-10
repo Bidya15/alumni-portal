@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-import { useApp } from "../context/AppContext";
+import { useApp, DEPARTMENTS } from "../context/AppContext";
 import styles from "./Login.module.css";
 
 export default function Login() {
+    const [role, setRole] = useState("ALUMNI"); // "ALUMNI", "ADMIN", "SUPER_ADMIN"
     const [email, setEmail] = useState("");
     const [pass, setPass] = useState("");
+    const [branch, setBranch] = useState("");
     const [otp, setOtp] = useState("");
     const [method, setMethod] = useState("password"); // "password" or "otp"
     const [step, setStep] = useState("credentials"); // "credentials" or "otp-verify"
@@ -17,20 +19,20 @@ export default function Login() {
 
     async function handlePasswordLogin(e) {
         e.preventDefault();
-        if (!email.trim() || !pass) return notify("Please enter both email and password", "err");
+        if (!email.trim() || !pass) return notify("Please enter both email and password", "err", true);
+        if (role !== "SUPER_ADMIN" && !branch) return notify("Please select your branch", "err", true);
         setBusy(true);
-        const res = await login(email.trim(), pass);
+        const res = await login(email.trim(), pass, role === "SUPER_ADMIN" ? "" : branch);
         setBusy(false);
         if (res.ok) {
             if (res.otpRequired) setStep("otp-verify");
-        } else {
-            notify(res.error || "Login failed. Please check credentials.", "err");
         }
     }
 
     async function handleOtpOnlyRequest(e) {
         if (e) e.preventDefault();
-        if (!email.trim()) return notify("Please enter your email", "err");
+        if (role !== "SUPER_ADMIN" && !branch) return notify("Please select your branch", "err", true);
+        if (!email.trim()) return notify("Please enter your email", "err", true);
         if (timer > 0) return;
         setBusy(true);
         try {
@@ -48,7 +50,7 @@ export default function Login() {
                 });
             }, 1000);
         } catch (err) {
-            notify(err.response?.data || "Failed to send OTP", "err");
+            notify(err.response?.data || "Failed to send OTP", "err", true);
         } finally {
             setBusy(false);
         }
@@ -56,13 +58,10 @@ export default function Login() {
 
     async function handleVerify(e) {
         e.preventDefault();
-        if (!otp) return notify("Please enter the 6-digit code", "err");
+        if (!otp) return notify("Please enter the 6-digit code", "err", true);
         setBusy(true);
-        const res = await confirmLoginOtp(email.trim(), otp);
+        const res = await confirmLoginOtp(email.trim(), otp, role === "SUPER_ADMIN" ? "" : branch);
         setBusy(false);
-        if (!res.ok) {
-            notify(res.error || "Invalid or expired code.", "err");
-        }
     }
 
     return (
@@ -80,6 +79,30 @@ export default function Login() {
                         <div className={styles.authTitle}>{footerConfig.appName || "AecianConnect"}</div>
                         <div className={styles.authSub}>Central Tracking System Login</div>
                     </div>
+                </div>
+
+                <div className={styles.roleTabs}>
+                    <button 
+                        type="button"
+                        className={`${styles.roleTab} ${role === 'ALUMNI' ? styles.active : ''}`}
+                        onClick={() => setRole('ALUMNI')}
+                    >
+                        🎓 Alumni
+                    </button>
+                    <button 
+                        type="button"
+                        className={`${styles.roleTab} ${role === 'ADMIN' ? styles.active : ''}`}
+                        onClick={() => setRole('ADMIN')}
+                    >
+                        ⚙️ Dept Admin
+                    </button>
+                    <button 
+                        type="button"
+                        className={`${styles.roleTab} ${role === 'SUPER_ADMIN' ? styles.active : ''}`}
+                        onClick={() => setRole('SUPER_ADMIN')}
+                    >
+                        🛡️ Super Admin
+                    </button>
                 </div>
 
                 <div className={styles.methodSelector}>
@@ -100,6 +123,23 @@ export default function Login() {
                 {step === "credentials" ? (
                     <>
                         <form onSubmit={method === "password" ? handlePasswordLogin : handleOtpOnlyRequest}>
+                            {role !== "SUPER_ADMIN" && (
+                                <div className={styles.formGroup}>
+                                    <label className={styles.formLabel}>Branch / Department</label>
+                                    <select 
+                                        className={styles.inp} 
+                                        value={branch} 
+                                        onChange={e => setBranch(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Choose Branch *</option>
+                                        {DEPARTMENTS.map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <div className={styles.formGroup}>
                                 <label className={styles.formLabel}>Email Address</label>
                                 <input className={styles.inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@college.edu" required />
@@ -147,10 +187,11 @@ export default function Login() {
                         <div className={styles.googleBox}>
                             <GoogleLogin
                                 onSuccess={credentialResponse => {
+                                    if (role !== "SUPER_ADMIN" && !branch) return notify("Please select your branch", "err", true);
                                     setBusy(true);
-                                    loginWithGoogle(credentialResponse.credential).finally(() => setBusy(false));
+                                    loginWithGoogle(credentialResponse.credential, role === "SUPER_ADMIN" ? "" : branch).finally(() => setBusy(false));
                                 }}
-                                onError={() => notify("Google Login Failed", "err")}
+                                onError={() => notify("Google Login Failed", "err", true)}
                                 // useOneTap disabled to prevent multiple GSI_LOGGER warnings in dev
                             />
                         </div>

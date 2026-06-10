@@ -15,37 +15,23 @@ const navItemVariants = {
 const NAV = {
     ROLE_SUPER_ADMIN: [
         { key: "overview", icon: "📊", label: "Dashboard" },
-        { key: "pending", icon: "⏳", label: "Approve Alumni", badge: "pending" },
         { key: "manage-admins", icon: "🛡️", label: "Manage Admins" },
-        { key: "manage", icon: "👥", label: "Manage Alumni" },
-        { key: "posts", icon: "📝", label: "Alumni Posts" },
+        { key: "alumni-central", icon: "🏛️", label: "Alumni Central" },
         { key: "events", icon: "📅", label: "Manage Events" },
         { key: "content-management", icon: "⚙️", label: "Content Management" },
-        { key: "export", icon: "📤", label: "Export Data" },
-        { key: "profile", icon: "👤", label: "My Profile" },
+        { key: "profile", icon: "👤", label: "My Profile", badge: "admin-alerts" },
     ],
     ROLE_ADMIN: [
         { key: "overview", icon: "📊", label: "Dashboard" },
-        { key: "pending", icon: "⏳", label: "Approve Alumni", badge: "pending" },
-        { key: "manage", icon: "👥", label: "Alumni Directory" },
-        { key: "posts", icon: "📝", label: "Alumni Posts" },
+        { key: "alumni-central", icon: "🏛️", label: "Alumni Central" },
         { key: "events", icon: "📅", label: "Manage Events" },
-
-        { key: "notifications", icon: "🔔", label: "Notifications", badge: "unread-notifs" },
-        { key: "giving", icon: "💰", label: "Donations" },
-        { key: "services", icon: "🛠️", label: "Alumni Services" },
-        { key: "profile", icon: "👤", label: "My Profile" },
+        { key: "profile", icon: "👤", label: "My Profile", badge: "admin-alerts" },
     ],
     ROLE_ALUMNI: [
         { key: "dashboard", icon: "🏠", label: "Dashboard" },
         { key: "networking-hub", icon: "👥", label: "Networking Hub" },
-        { key: "job-portal", icon: "💼", label: "Job Portal" },
-        { key: "directory", icon: "🔍", label: "Alumni Directory" },
-        { key: "success-stories", icon: "🏆", label: "Success Stories" },
-        { key: "feed", icon: "📰", label: "Alumni Feed" },
-        { key: "giving", icon: "💰", label: "Donations" },
-        { key: "feedback", icon: "💬", label: "Feedback" },
-        { key: "profile", icon: "👤", label: "Your Profile" },
+        { key: "feed", icon: "📰", label: "Community & Jobs" },
+        { key: "profile", icon: "👤", label: "Your Profile", badge: "unread-notifs" },
         { key: "services", icon: "🛠️", label: "Alumni Services" },
     ],
 };
@@ -62,6 +48,7 @@ export default function Sidebar() {
     function getBadge(b) {
         if (b === "pending") return pendingCount;
         if (b === "unread-notifs") return unreadCount;
+        if (b === "admin-alerts") return unreadCount + pendingCount;
         return 0;
     }
 
@@ -81,9 +68,13 @@ export default function Sidebar() {
                 <div className={styles.brand}>
                     <div
                         className={styles.brandIcon}
-                        style={(footerConfig.appLogo?.startsWith("http") || footerConfig.appLogo?.startsWith("data:image/")) ? { background: 'transparent', boxShadow: 'none' } : {}}
+                        style={{ background: 'transparent', boxShadow: 'none' }}
                     >
-                        {(footerConfig.appLogo?.startsWith("http") || footerConfig.appLogo?.startsWith("data:image/")) ? <img src={footerConfig.appLogo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : (footerConfig.appLogo || "🎓")}
+                        {footerConfig.appLogo ? (
+                            <img src={footerConfig.appLogo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "4px" }} />
+                        ) : (
+                            "🎓"
+                        )}
                     </div>
                     <div className={styles.brandText}>
                         <div className={styles.brandName}>{footerConfig.appName || "AecianConnect"}</div>
@@ -138,8 +129,8 @@ export default function Sidebar() {
                         <div className={styles.userPillInfo}>
                             <div className={styles.userName}>{currentUser?.name}</div>
                             <div className={styles.userRole}>
-                                {role === 'ROLE_SUPER_ADMIN' ? 'System Super Admin' : 
-                                 role === 'ROLE_ADMIN' ? 'Department Admin' : 'Alumni'}
+                                {role === 'ROLE_SUPER_ADMIN' ? 'System Super Admin' :
+                                    role === 'ROLE_ADMIN' ? 'Department Admin' : 'Alumni'}
                             </div>
                         </div>
                     </div>

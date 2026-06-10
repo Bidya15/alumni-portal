@@ -1,11 +1,13 @@
 package com.backend.backend.controller;
 
+import com.backend.backend.dto.RegisterRequest;
 import com.backend.backend.model.User;
 import com.backend.backend.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -62,5 +64,11 @@ public class AdminController {
         User admin = adminService.getUserByEmail(email);
         adminService.deleteUser(id, admin.getRole().name(), admin.getDepartment());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-register")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<User>> bulkRegister(@RequestBody List<RegisterRequest> requests) {
+        return ResponseEntity.ok(adminService.bulkAddAlumni(requests));
     }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { useApp, DEPARTMENTS } from "../context/AppContext";
 import { timeAgo, avatarColor, fmtDate, fmtDateTime, POST_TYPE_META } from "../utils/helpers";
 import AvatarImg from "../components/AvatarImg";
@@ -7,6 +8,11 @@ import NotificationsView from "../components/NotificationsView";
 import EventsPanel from "../components/EventsPanel";
 import NewPostModal from "../components/NewPostModal";
 import MentorshipManager from "../components/MentorshipManager";
+import CareerManager from "../components/CareerManager";
+import FeedbackView from "./FeedbackView";
+import JobPortal from "./JobPortal";
+import { DraggableBox } from "./Admin";
+
 
 const PAGE_SIZE = 6;
 
@@ -172,6 +178,7 @@ function PostCard({ p, showActions = false, onEdit }) {
 function Feed({ isSuccessStories = false }) {
     const { posts, currentUser, fetchPosts } = useApp();
     const [modal, setModal] = useState(false);
+    const [subTab, setSubTab] = useState("feed");
 
     // Default filter logic
     const initialFilter = isSuccessStories ? "SUCCESS_STORY" : "ALL";
@@ -204,15 +211,51 @@ function Feed({ isSuccessStories = false }) {
                 defaultType={isSuccessStories ? "SUCCESS_STORY" : "JOB"}
             />}
 
-            <div className="create-row" style={{ marginTop: '20px' }}>
-                <div>
-                    <h3 className="section-title">{title}</h3>
-                    <p className="section-subtitle">{subtitle}</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => setModal(true)}>
-                    {isSuccessStories ? "＋ Post Story" : "＋ Create Post"}
-                </button>
-            </div>
+            {!isSuccessStories && (
+                <DraggableBox className="profile-subnav" style={{
+                    display: 'flex', gap: '32px', marginBottom: '24px',
+                    borderBottom: '1px solid var(--gray-200)', padding: '0 8px'
+                }}>
+                    {[
+                        { id: 'feed', label: 'Social Feed', icon: '📰' },
+                        { id: 'jobs', label: 'Career Board', icon: '💼' }
+                    ].map(t => (
+                        <motion.button
+                            key={t.id}
+                            onClick={() => setSubTab(t.id)}
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.97 }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '10px',
+                                padding: '14px 4px', border: 'none', background: 'none',
+                                cursor: 'pointer', fontWeight: subTab === t.id ? '700' : '500',
+                                color: subTab === t.id ? 'var(--indigo)' : 'var(--gray-500)',
+                                borderBottom: subTab === t.id ? '3px solid var(--indigo)' : '3px solid transparent',
+                                fontSize: '14px', whiteSpace: 'nowrap', transition: 'color 0.2s, border-color 0.2s',
+                                position: 'relative',
+                                zIndex: 2
+                            }}
+                        >
+                            <span>{t.icon}</span>
+                            {t.label}
+                        </motion.button>
+                    ))}
+                </DraggableBox>
+            )}
+
+            {subTab === "jobs" && !isSuccessStories ? (
+                <JobPortal />
+            ) : (
+                <>
+                    <div className="create-row" style={{ marginTop: '20px' }}>
+                        <div>
+                            <h3 className="section-title">{title}</h3>
+                            <p className="section-subtitle">{subtitle}</p>
+                        </div>
+                        <button className="btn btn-primary" onClick={() => setModal(true)}>
+                            {isSuccessStories ? "＋ Post Story" : "＋ Create Post"}
+                        </button>
+                    </div>
 
 
             {/* Stats for community - only show in main feed */}
@@ -233,13 +276,13 @@ function Feed({ isSuccessStories = false }) {
             )}
 
             {!isSuccessStories && (
-                <div className="chips">
+                <DraggableBox className="chips">
                     {activeFilters.map(f => (
                         <button key={f} className={`chip${filter === f ? " active" : ""}`} onClick={() => setFilter(f)}>
                             {f === "ALL" ? "All Types" : `${POST_TYPE_META[f].icon} ${POST_TYPE_META[f].label}`}
                         </button>
                     ))}
-                </div>
+                </DraggableBox>
             )}
 
             {visible.length === 0
@@ -252,71 +295,15 @@ function Feed({ isSuccessStories = false }) {
                 </div>
                 : <div className="posts-list">{visible.map(p => <PostCard key={p.id} p={p} showActions={false} />)}</div>
             }
-        </div>
-    );
-}
-
-// ─── Alumni Directory ───────────────────────────────────────
-function Directory() {
-    const { users, fetchDirectory, currentUser } = useApp();
-    const approved = users.filter(u => u.status === "APPROVED" && u.role === "ROLE_ALUMNI" && u.id !== currentUser?.id);
-    const [q, setQ] = useState("");
-    const [batch, setBatch] = useState("");
-    const [city, setCity] = useState("");
-    const [company, setComp] = useState("");
-    const [page, setPage] = useState(1);
-
-    useEffect(() => {
-        fetchDirectory();
-    }, []);
-
-    const filtered = approved.filter(u => {
-        if (q && !u.name.toLowerCase().includes(q.toLowerCase()) && !u.techStack?.toLowerCase().includes(q.toLowerCase())) return false;
-        if (batch && String(u.batch) !== batch) return false;
-        if (city && u.location && !u.location.toLowerCase().includes(city.toLowerCase())) return false;
-        if (company && u.company && !u.company.toLowerCase().includes(company.toLowerCase())) return false;
-        return true;
-    });
-
-    const total = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const pg = Math.min(page, total);
-    const slice = filtered.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
-    const batches = [...new Set(approved.map(u => u.batch))].sort();
-
-    return (
-        <div className="directory-container">
-            <div className="filter-row">
-                <input className="inp" placeholder="🔍 Search name or skills…" value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
-                <input className="inp" placeholder="📍 City" value={city} onChange={e => { setCity(e.target.value); setPage(1) }} />
-                <input className="inp" placeholder="🏢 Company" value={company} onChange={e => { setComp(e.target.value); setPage(1) }} />
-                <select className="inp" value={batch} onChange={e => { setBatch(e.target.value); setPage(1) }}>
-                    <option value="">All Batches</option>
-                    {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-                <button className="btn btn-outline btn-sm" onClick={() => { setQ(""); setBatch(""); setCity(""); setComp(""); setPage(1); }}>Reset</button>
-            </div>
-
-            <div className="result-count">{filtered.length} alumni found</div>
-
-            <div className="alumni-grid">
-                {slice.map(u => <AlumniCard key={u.id} user={u} />)}
-                {!slice.length && <div className="empty full-span"><div className="empty-icon">🔍</div><div className="empty-msg">No alumni match your search</div></div>}
-            </div>
-
-            {total > 1 && (
-                <div className="pager">
-                    <button className="pager-btn" disabled={pg === 1} onClick={() => setPage(pg - 1)}>←</button>
-                    {Array.from({ length: total }, (_, i) => i + 1).map(n => (
-                        <button key={n} className={`pager-btn${n === pg ? " on" : ""}`} onClick={() => setPage(n)}>{n}</button>
-                    ))}
-                    <button className="pager-btn" disabled={pg === total} onClick={() => setPage(pg + 1)}>→</button>
-                </div>
+                </>
             )}
         </div>
     );
 }
 
-function AlumniCard({ user }) {
+
+
+export function AlumniCard({ user }) {
     const { sentConnections, connections, sendConnectionRequest, currentUser, setTab, assignAdmin } = useApp();
     const [expanded, setExpanded] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
@@ -329,27 +316,33 @@ function AlumniCard({ user }) {
     const receivedReq = connections.find(c => c.sender?.id === user.id);
     const isConnected =
         (sentReq && sentReq.status === "ACCEPTED") ||
-        (receivedReq && receivedReq.status === "ACCEPTED");
+        (receivedReq && receivedReq.status === "ACCEPTED") ||
+        user.id === currentUser?.id ||
+        currentUser?.role === "ROLE_SUPER_ADMIN" ||
+        currentUser?.role === "ROLE_ADMIN";
     const isPending = sentReq && sentReq.status === "PENDING";
 
     function ConnectBtn() {
         if (isConnected) return (
-            <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn btn-green btn-sm" disabled style={{ opacity: 0.8 }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
+                <button className="btn btn-green btn-sm flex-1" disabled style={{ opacity: 0.8 }}>
                     ✓ Connected
                 </button>
-                <button className="btn btn-outline btn-sm" onClick={() => setTab("messages")}>
+                <button className="btn btn-outline btn-sm flex-1" onClick={() => setTab("messages")}>
                     💬 Chat
                 </button>
+                <a href={`mailto:${user.email}`} className="btn btn-outline btn-sm flex-1" title={`Send email to ${user.name}`}>
+                    ✉️ Mail
+                </a>
             </div>
         );
         if (isPending) return (
-            <button className="btn btn-outline btn-sm" disabled style={{ opacity: 0.7 }}>
+            <button className="btn btn-outline btn-sm flex-1" disabled style={{ opacity: 0.7 }}>
                 ⏳ Pending
             </button>
         );
         return (
-            <button className="btn btn-primary btn-sm" onClick={() => sendConnectionRequest(user.id)}>
+            <button className="btn btn-primary btn-sm flex-1" onClick={() => sendConnectionRequest(user.id)}>
                 + Connect
             </button>
         );
@@ -383,16 +376,16 @@ function AlumniCard({ user }) {
                         {user.techStack.split(",").map(t => <span key={t} className="tag">{t.trim()}</span>)}
                     </div>
                 )}
-                <div className="card-actions" style={{ flexWrap: 'wrap' }}>
+                <div className="card-actions">
                     <button className="btn btn-outline btn-sm flex-1" onClick={() => setShowProfile(true)}>👤 View Profile</button>
                     <ConnectBtn />
                     {user.linkedinUrl && (
                         <a href={user.linkedinUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">LinkedIn ↗</a>
                     )}
-                    
+
                     {currentUser?.role === "ROLE_SUPER_ADMIN" && (
-                        <button 
-                            className={`btn btn-sm ${showAssignAdmin ? 'btn-outline' : 'btn-primary'}`} 
+                        <button
+                            className={`btn btn-sm ${showAssignAdmin ? 'btn-outline' : 'btn-primary'}`}
                             onClick={(e) => { e.stopPropagation(); setShowAssignAdmin(!showAssignAdmin); }}
                         >
                             {showAssignAdmin ? "✕ Cancel" : "🛡️ Assign Admin"}
@@ -401,16 +394,16 @@ function AlumniCard({ user }) {
                 </div>
 
                 {showAssignAdmin && (
-                    <div style={{ 
-                        marginTop: '12px', padding: '12px', background: 'var(--gray-50)', 
-                        borderRadius: '8px', border: '1px solid var(--gray-200)' 
+                    <div style={{
+                        marginTop: '12px', padding: '12px', background: 'var(--gray-50)',
+                        borderRadius: '8px', border: '1px solid var(--gray-200)'
                     }}>
                         <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-700)' }}>
                             Choose Department for {user.name}
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <select 
-                                className="inp" 
+                            <select
+                                className="inp"
                                 style={{ flex: 1, padding: '4px 8px', fontSize: '13px', height: '34px' }}
                                 value={assignDept}
                                 onChange={e => setAssignDept(e.target.value)}
@@ -424,12 +417,12 @@ function AlumniCard({ user }) {
                                 <option>Civil Dept</option>
                                 <option>Training & Placement</option>
                             </select>
-                            <button 
+                            <button
                                 className="btn btn-primary btn-sm"
                                 onClick={async (e) => {
                                     e.stopPropagation();
                                     const ok = await assignAdmin(user.id, assignDept);
-                                    if(ok) setShowAssignAdmin(false);
+                                    if (ok) setShowAssignAdmin(false);
                                 }}
                             >
                                 Confirm
@@ -444,12 +437,26 @@ function AlumniCard({ user }) {
 
 
 // ─── Profile Modal ──────────────────────────────────────────
-function ProfileModal({ user, onClose }) {
+export function ProfileModal({ user, onClose }) {
+    const { sentConnections, connections, currentUser } = useApp();
+
     useEffect(() => {
         function onKey(e) { if (e.key === "Escape") onClose(); }
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
     }, [onClose]);
+
+    // Determine connection status
+    const sentReq = sentConnections.find(c => c.receiver?.id === user.id);
+    const receivedReq = connections.find(c => c.sender?.id === user.id);
+    const isConnected =
+        (sentReq && sentReq.status === "ACCEPTED") ||
+        (receivedReq && receivedReq.status === "ACCEPTED") ||
+        user.id === currentUser?.id ||
+        currentUser?.role === "ROLE_SUPER_ADMIN" ||
+        currentUser?.role === "ROLE_ADMIN";
+
+    const displayEmail = isConnected ? user.email : "Connect to view email";
 
     return (
         <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -472,16 +479,23 @@ function ProfileModal({ user, onClose }) {
                         <h2 className="profile-name">{user.name}</h2>
                         <div className="profile-sub">{user.designation} {user.company && `at ${user.company}`}</div>
                         <div className="card-batch-row"><span className="batch-badge">Batch {user.batch}</span></div>
-                        {user.linkedinUrl && <a href={user.linkedinUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">LinkedIn ↗</a>}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            {user.linkedinUrl && <a href={user.linkedinUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">LinkedIn ↗</a>}
+                            {isConnected && (
+                                <a href={`mailto:${user.email}`} className="btn btn-primary btn-sm">
+                                    ✉️ Direct Mail
+                                </a>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {user.bio && <div className="bio-box bio-box-mb">💬 {user.bio}</div>}
                 <div className="prof-grid">
-                    {[{ k: "Email", v: user.email }, { k: "Batch", v: user.batch }, { k: "Degree", v: user.degree }, { k: "Company", v: user.company }, { k: "Location", v: user.location }]
+                    {[{ k: "Email", v: displayEmail }, { k: "Batch", v: user.batch }, { k: "Degree", v: user.degree }, { k: "Company", v: user.company }, { k: "Location", v: user.location }]
                         .filter(f => f.v).map(f => (
                             <div key={f.k} className="prof-field">
                                 <div className="prof-fkey">{f.k}</div>
-                                <div className="prof-fval">{f.v}</div>
+                                <div className="prof-fval" style={f.k === "Email" && !isConnected ? { fontStyle: 'italic', color: 'var(--gray-500)', fontSize: '13px' } : {}}>{f.v}</div>
                             </div>
                         ))}
                     {user.techStack && (
@@ -585,6 +599,35 @@ function MyProfessionalServices() {
     );
 }
 
+// ─── My Connections ─────────────────────────────────────────
+function MyConnections() {
+    const { connections, sentConnections, currentUser } = useApp();
+    
+    const acceptedConnections = [
+        ...connections.filter(c => c.status === "ACCEPTED").map(c => c.sender),
+        ...sentConnections.filter(c => c.status === "ACCEPTED").map(c => c.receiver)
+    ].filter(u => u && u.id !== currentUser?.id);
+
+    return (
+        <div className="profile-card" style={{ marginTop: "20px" }}>
+            <h3 className="section-title">👥 My Connections</h3>
+            <p className="section-subtitle">Alumni you are currently connected with</p>
+            
+            {acceptedConnections.length === 0 ? (
+                <div className="empty" style={{ padding: "40px 0" }}>
+                    <div className="empty-icon">🤝</div>
+                    <div className="empty-msg">No connections yet</div>
+                    <div className="empty-sub">Explore the Alumni Directory to find and connect with peers.</div>
+                </div>
+            ) : (
+                <div className="alumni-grid" style={{ marginTop: '20px' }}>
+                    {acceptedConnections.map(u => <AlumniCard key={u.id} user={u} />)}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── My Profile ─────────────────────────────────────────────
 function Profile() {
     const { currentUser, updateProfile, changePassword, notify, confirm, myNotifications = [] } = useApp();
@@ -609,6 +652,9 @@ function Profile() {
 
     const [pwdForm, setPwdForm] = useState({ old: "", new: "", confirm: "" });
     const [showPwd, setShowPwd] = useState(false);
+    const [showOld, setShowOld] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     function change(k) { return e => setForm(f => ({ ...f, [k]: e.target.value })); }
 
@@ -674,26 +720,32 @@ function Profile() {
 
         return (
             <div className="profile-page-container">
-                {/* Sub-navigation for Profile Hub */}
-                <div className="profile-subnav" style={{
+
+                <DraggableBox className="profile-subnav" style={{
                     display: 'flex', gap: '32px', marginBottom: '24px',
                     borderBottom: '1px solid var(--gray-200)', padding: '0 8px'
                 }}>
                     {[
                         { id: 'overview', label: 'Overview', icon: '👤' },
                         { id: 'messages', label: 'Messages', icon: '💬', badge: unreadMsgs },
-                        { id: 'notifications', label: 'Notifications', icon: '🔔', badge: unreadNotifs }
+                        { id: 'notifications', label: 'Notifications', icon: '🔔', badge: unreadNotifs },
+                        { id: 'connections', label: 'Connections', icon: '👥' },
+                        { id: 'feedback', label: 'Feedback', icon: '💬' }
                     ].map(t => (
-                        <button
+                        <motion.button
                             key={t.id}
                             onClick={() => { setSubTab(t.id); setEditing(false); }}
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.97 }}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '12px 4px', fontSize: '14px', fontWeight: 600,
-                                color: subTab === t.id ? 'var(--primary)' : 'var(--gray-500)',
-                                borderBottom: subTab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
-                                background: 'none', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
-                                cursor: 'pointer', position: 'relative', transition: 'all 0.2s'
+                                display: 'flex', alignItems: 'center', gap: '10px',
+                                padding: '14px 4px', border: 'none', background: 'none',
+                                cursor: 'pointer', fontWeight: subTab === t.id ? '700' : '500',
+                                color: subTab === t.id ? 'var(--indigo)' : 'var(--gray-500)',
+                                borderBottom: subTab === t.id ? '3px solid var(--indigo)' : '3px solid transparent',
+                                fontSize: '14px', whiteSpace: 'nowrap', transition: 'color 0.2s, border-color 0.2s',
+                                position: 'relative',
+                                zIndex: 2
                             }}
                         >
                             <span>{t.icon}</span>
@@ -704,12 +756,14 @@ function Profile() {
                                     padding: '2px 6px', borderRadius: '10px', marginLeft: '4px'
                                 }}>{t.badge}</span>
                             )}
-                        </button>
+                        </motion.button>
                     ))}
-                </div>
+                </DraggableBox>
 
                 {subTab === "messages" && <ChatView />}
                 {subTab === "notifications" && <NotificationsView />}
+                {subTab === "connections" && <MyConnections />}
+                {subTab === "feedback" && <FeedbackView />}
 
                 {subTab === "overview" && (
                     <div className="profile-view-layout">
@@ -763,7 +817,6 @@ function Profile() {
                                 </div>
                             </div>
 
-                            {/* Services grid placed BELOW the profile info card, as requested */}
                             <MyProfessionalServices />
 
                             <div style={{ marginTop: '32px' }}>
@@ -771,10 +824,19 @@ function Profile() {
                                 <p className="section-subtitle">Requests you've received from students and peers</p>
                                 <MentorshipManager />
                             </div>
+
+                            <div style={{ marginTop: '32px' }}>
+                                <h3 className="section-title">💼 Career Requests Dashboard</h3>
+                                <p className="section-subtitle">Applications and referral requests for your job posts</p>
+                                <CareerManager />
+                            </div>
                         </div>
 
                         <div className="profile-view-side">
                             <MyCareerOpportunities />
+                            <div style={{ marginTop: '24px' }}>
+                                <Feed isSuccessStories={true} />
+                            </div>
                         </div>
                     </div>
                 )}
@@ -850,37 +912,65 @@ function Profile() {
                         <form onSubmit={handlePwdChange}>
                             <div className="form-group">
                                 <label>Current Password</label>
-                                <input
-                                    type="password"
-                                    className="inp"
-                                    placeholder="Enter old password"
-                                    value={pwdForm.old}
-                                    onChange={e => setPwdForm({ ...pwdForm, old: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div className="reg-grid">
-                                <div className="form-group">
-                                    <label>New Password</label>
+                                <div style={{ position: 'relative' }}>
                                     <input
-                                        type="password"
+                                        type={showOld ? "text" : "password"}
+                                        className="inp"
+                                        placeholder="Enter old password"
+                                        value={pwdForm.old}
+                                        onChange={e => setPwdForm({ ...pwdForm, old: e.target.value })}
+                                        required
+                                        style={{ paddingRight: '40px' }}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowOld(!showOld)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.6 }}
+                                    >
+                                        {showOld ? "👁️" : "🙈"}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>New Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showNew ? "text" : "password"}
                                         className="inp"
                                         placeholder="Min. 6 characters"
                                         value={pwdForm.new}
                                         onChange={e => setPwdForm({ ...pwdForm, new: e.target.value })}
                                         required
+                                        style={{ paddingRight: '40px' }}
                                     />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowNew(!showNew)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.6 }}
+                                    >
+                                        {showNew ? "👁️" : "🙈"}
+                                    </button>
                                 </div>
-                                <div className="form-group">
-                                    <label>Confirm New Password</label>
+                            </div>
+                            <div className="form-group">
+                                <label>Confirm New Password</label>
+                                <div style={{ position: 'relative' }}>
                                     <input
-                                        type="password"
+                                        type={showConfirm ? "text" : "password"}
                                         className="inp"
                                         placeholder="Repeat new password"
                                         value={pwdForm.confirm}
                                         onChange={e => setPwdForm({ ...pwdForm, confirm: e.target.value })}
                                         required
+                                        style={{ paddingRight: '40px' }}
                                     />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowConfirm(!showConfirm)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.6 }}
+                                    >
+                                        {showConfirm ? "👁️" : "🙈"}
+                                    </button>
                                 </div>
                             </div>
                             <div className="save-btns" style={{ marginTop: "16px" }}>
@@ -895,4 +985,4 @@ function Profile() {
     );
 }
 
-export { Feed, Directory, Profile };
+export { Feed, Profile };

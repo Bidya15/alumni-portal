@@ -15,12 +15,13 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final com.backend.backend.repository.UserRepository userRepository;
 
     @GetMapping("/my-notifications")
     public ResponseEntity<List<Notification>> getMyNotifications(Authentication auth) {
-        String roleStr = auth.getAuthorities().iterator().next().getAuthority();
-        User.Role role = User.Role.valueOf(roleStr);
-        return ResponseEntity.ok(notificationService.getNotificationsForRole(role));
+        String email = auth.getName();
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+        return ResponseEntity.ok(notificationService.getNotificationsForUser(currentUser));
     }
 
     @PutMapping("/{id}/read")

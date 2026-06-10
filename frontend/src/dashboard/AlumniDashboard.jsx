@@ -12,22 +12,35 @@ import EventsPanel from "../components/EventsPanel";
 // Define navigation cards for the dashboard
 const DASHBOARD_FEATURES = [
     { id: "networking", title: "Networking Hub", desc: "Build professional relationships with verified alumni mentors.", tab: "networking-hub" },
-    { id: "jobs", title: "Career Portal", desc: "Discover career opportunities and internal referral openings.", tab: "job-portal" },
-    { id: "donations", title: "Giving Hub", desc: "Support institutional advancement and research initiatives.", tab: "giving" },
-    { id: "feed", title: "Alumni Feed", desc: "Engage with real-time updates from the global alumni community.", tab: "feed" },
-    { id: "directory", title: "Alumni Directory", desc: "Find colleagues and friends using advanced search filters.", tab: "directory" }
+    { id: "community", title: "Community & Career Hub", desc: "Access the social feed and exclusive AEC job opportunities in one place.", tab: "feed" }
 ];
 
 export default function AlumniDashboard() {
-    const { currentUser, setTab, posts, users } = useApp();
+    const { currentUser, setTab, posts, users, connections = [], sentConnections = [] } = useApp();
 
     // Calculate real-time stats from backend data
     const activeJobCount = posts.filter(post => post.postType === "JOB" || post.postType === "REFERRAL").length;
     const totalVerifiedAlumni = users.filter(user => user.role === "ROLE_ALUMNI" && user.status === "APPROVED").length;
+    const activeConnections = connections.filter(c => c.status === "ACCEPTED").length + sentConnections.filter(c => c.status === "ACCEPTED").length;
 
     // Humanized Profile Info
     const userRoleInfo = `${currentUser?.designation || "Graduate"} ${currentUser?.company ? `at ${currentUser.company}` : "AEC Alumni"}`;
     const userClassInfo = `Class of ${currentUser?.batch || "Unknown"}`;
+
+    // Profile Completion Logic
+    const profileFields = [
+        currentUser?.designation,
+        currentUser?.company,
+        currentUser?.techStack,
+        currentUser?.bio,
+        currentUser?.location,
+        currentUser?.avatar
+    ];
+    const completedFields = profileFields.filter(f => f && String(f).trim().length > 0).length;
+    const completionPercentage = Math.round((completedFields / profileFields.length) * 100);
+
+    // Get recent success stories for spotlight
+    const spotlightStories = posts.filter(p => p.postType === "SUCCESS_STORY").slice(0, 2);
 
     return (
         <div className={styles.dashboardWrapper}>
@@ -39,27 +52,77 @@ export default function AlumniDashboard() {
                             <h1 className={styles.greeting}>Welcome back, <span className={styles.userName}>{currentUser?.name}</span></h1>
                             <p className={styles.userRoleLine}>{userRoleInfo} | {userClassInfo}</p>
                         </div>
-                        <button className={styles.profileBtn} onClick={() => setTab("profile")}>
-                            Edit Professional Profile
-                        </button>
+                        <div className={styles.profileMeta}>
+                            <div className={styles.completionWrapper} onClick={() => setTab("profile")}>
+                                <div className={styles.completionLabel}>
+                                    <span>Profile Strength</span>
+                                    <span>{completionPercentage}%</span>
+                                </div>
+                                <div className={styles.progressBar}>
+                                    <motion.div 
+                                        className={styles.progressFill} 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${completionPercentage}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </header>
+
+                    {/* Quick Actions Bar */}
+                    <section className={styles.quickActions}>
+                        <button className={styles.actionPill} onClick={() => setTab("feed")}>
+                            <span>🤝</span> Post a Referral
+                        </button>
+                        <button className={styles.actionPill} onClick={() => setTab("networking-hub")}>
+                            <span>🔍</span> Find a Mentor
+                        </button>
+                        <button className={styles.actionPill} onClick={() => setTab("feed")}>
+                            <span>📰</span> Share Update
+                        </button>
+                        <button className={styles.actionPill} onClick={() => setTab("profile")}>
+                            <span>📝</span> Update Bio
+                        </button>
+                    </section>
 
                     <section className={styles.metricsBar}>
                         <div className={styles.metricItem}>
-                            <span className={styles.metricLabel}>Verified Network:</span>
+                            <span className={styles.metricLabel}>Verified Network</span>
                             <span className={styles.metricValue}>{totalVerifiedAlumni} Alumni</span>
                         </div>
                         <div className={styles.metricDivider} />
                         <div className={styles.metricItem}>
-                            <span className={styles.metricLabel}>Career Opportunities:</span>
-                            <span className={styles.metricValue}>{activeJobCount} Active Positions</span>
+                            <span className={styles.metricLabel}>Career Board</span>
+                            <span className={styles.metricValue}>{activeJobCount} Active Roles</span>
                         </div>
                         <div className={styles.metricDivider} />
                         <div className={styles.metricItem}>
-                            <span className={styles.metricLabel}>Account Status:</span>
-                            <span className={`${styles.metricValue} ${styles.statusActive}`}>Certified Access</span>
+                            <span className={styles.metricLabel}>My Network</span>
+                            <span className={styles.metricValue}>{activeConnections} Connected</span>
                         </div>
                     </section>
+
+                    {/* Success Spotlight */}
+                    {spotlightStories.length > 0 && (
+                        <section className={styles.spotlightSection}>
+                            <h2 className={styles.sectionHeading}>Alumni Spotlight</h2>
+                            <div className={styles.spotlightGrid}>
+                                {spotlightStories.map(story => (
+                                    <div key={story.id} className={styles.spotlightCard} onClick={() => setTab("profile")}>
+                                        <div className={styles.spotlightContent}>
+                                            <span className={styles.spotlightTag}>SUCCESS STORY</span>
+                                            <h3 className={styles.spotlightTitle}>{story.title}</h3>
+                                            <p className={styles.spotlightDesc}>{story.description?.substring(0, 100)}...</p>
+                                            <div className={styles.spotlightAuthor}>
+                                                — {story.user?.name}, Class of {story.user?.batch}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
                     <main className={styles.featuresGrid}>
                         {DASHBOARD_FEATURES.map((feature, index) => (

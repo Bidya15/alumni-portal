@@ -82,6 +82,58 @@
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
 }
 
+[data-theme="dark"] {
+  /* Neutrals - Deep Dark Palette */
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #cbd5e1;
+  --gray-700: #e2e8f0;
+  --gray-800: #f1f5f9;
+  --gray-900: #f8fafc;
+
+  /* Surface Override */
+  --bg: #0b0f19;
+  --surface: #111827;
+  --border: #1f2937;
+  --border-lt: #1e293b;
+
+  /* Shadow Override */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+
+  /* Sidebar Override */
+  --sidebar-bg: #030712;
+  --sidebar-hover: rgba(255, 255, 255, 0.03);
+  --sidebar-active: rgba(99, 102, 241, 0.2);
+
+  /* Glassmorphism Defaults (Dark Mode) */
+  --glass-bg: rgba(17, 24, 39, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-text: #f8fafc;
+  --glass-text-muted: #94a3b8;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* State Colors - Slightly Muted for Dark Mode */
+  --job-bg: rgba(251, 191, 36, 0.1);
+  --job-c: #fbbf24;
+  --job-border: rgba(251, 191, 36, 0.2);
+  --ref-bg: rgba(59, 130, 246, 0.1);
+  --ref-c: #60a5fa;
+  --ref-border: rgba(59, 130, 246, 0.2);
+  --men-bg: rgba(16, 185, 129, 0.1);
+  --men-c: #34d399;
+  --men-border: rgba(16, 185, 129, 0.2);
+  --web-bg: rgba(139, 92, 246, 0.1);
+  --web-c: #a78bfa;
+  --web-border: rgba(139, 92, 246, 0.2);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -296,13 +348,14 @@ select.inp {
 }
 
 .btn-red {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
 }
 
 .btn-red:hover {
-  background: #fecaca;
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 .btn-ghost {
@@ -324,6 +377,9 @@ select.inp {
 
 .btn-full {
   width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.4;
 }
 
 /* ─── App Shell ─────────────────────────────────────── */
@@ -903,6 +959,13 @@ select.inp {
   box-shadow: var(--shadow-sm);
 }
 
+@media (max-width: 800px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
 /* Chips */
 .chips {
   display: flex;
@@ -985,8 +1048,16 @@ select.inp {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  overflow: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
 }
 
 table {
@@ -1009,6 +1080,10 @@ th {
   letter-spacing: .5px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+}
+
+th:last-child, td:last-child {
+  padding-right: 40px !important;
 }
 
 td {
@@ -1951,11 +2026,20 @@ tr:hover td {
 }
 
 .card-actions {
-  margin-top: 10px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  width: 100%;
+  margin-top: 10px;
 }
+
+@media (max-width: 480px) {
+  .card-actions > * {
+    flex: 1 1 100% !important;
+  }
+}
+
+
 
 /* ─── Requests Tabs ────────────────────────────────── */
 .sub-tab-bar {

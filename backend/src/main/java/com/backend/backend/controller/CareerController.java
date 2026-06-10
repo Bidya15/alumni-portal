@@ -59,6 +59,11 @@ public class CareerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(request);
     }
 
+    @GetMapping("/incoming-requests")
+    public ResponseEntity<List<CareerRequest>> getIncomingRequests(@RequestParam Long userId) {
+        return ResponseEntity.ok(careerRequestRepository.findByPostUserId(userId));
+    }
+
     @GetMapping("/my-requests")
     public ResponseEntity<List<CareerRequest>> getMyRequests(@RequestParam Long userId) {
         Optional<User> userOpt = userRepository.findById(userId);

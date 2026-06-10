@@ -41,15 +41,11 @@ const F = ({ form, handleChange, label, name, type = "text", placeholder = "", r
                 required={req}
             >
                 <option value="">Select Degree / Program</option>
-                <option value="B.Tech CSE">B.Tech CSE</option>
-                <option value="B.Tech IT">B.Tech IT</option>
-                <option value="B.Tech ECE">B.Tech ECE</option>
-                <option value="B.Tech EE">B.Tech EE</option>
-                <option value="B.Tech ME">B.Tech ME</option>
-                <option value="B.Tech CE">B.Tech ME</option>
-                <option value="M.Tech">M.Tech</option>
-                <option value="MCA">MCA</option>
-                <option value="MBA">MBA</option>
+                <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                <option value="M.Tech">M.Tech (Master of Technology)</option>
+                <option value="MCA">MCA (Master of Computer Applications)</option>
+                <option value="MBA">MBA (Master of Business Administration)</option>
+                <option value="PhD">Ph.D. (Doctor of Philosophy)</option>
                 <option value="Other">Other</option>
             </select>
         ) : name === "department" ? (
@@ -112,18 +108,18 @@ export default function Register() {
         const required = ["name", "email", "password", "batch", "degree", "department"];
         for (const k of required) {
             if (!form[k]) {
-                return notify(`${k.charAt(0).toUpperCase() + k.slice(1)} is required.`, "err");
+                return notify(`${k.charAt(0).toUpperCase() + k.slice(1)} is required.`, "err", true);
             }
         }
 
         if (Number(form.batch) < 1900 || Number(form.batch) > new Date().getFullYear() + 5) {
-            return notify("Please enter a valid graduation year.", "err");
+            return notify("Please enter a valid graduation year.", "err", true);
         }
 
         let finalDegree = form.degree;
         if (form.degree === "Other") {
             if (!customDegree.trim()) {
-                return notify("Please specify your custom degree.", "err");
+                return notify("Please specify your custom degree.", "err", true);
             }
             finalDegree = customDegree.trim();
         }
@@ -137,9 +133,9 @@ export default function Register() {
         const res = await register(payload);
         if (res.ok) {
             setDone(true);
-            notify("Account created successfully! Awaiting admin approval.", "ok");
+            notify("Account created successfully! Awaiting admin approval.", "ok", true);
         } else {
-            notify(res.message || "Registration failed. Please try again.", "err");
+            notify(res.message || "Registration failed. Please try again.", "err", true);
         }
     }
 

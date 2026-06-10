@@ -18,4 +18,10 @@ public interface CareerRequestRepository extends JpaRepository<CareerRequest, Lo
     Optional<CareerRequest> findByApplicantAndPost(User applicant, Post post);
 
     boolean existsByApplicantAndPost(User applicant, Post post);
+
+    List<CareerRequest> findByApplicantId(Long applicantId);
+
+    List<CareerRequest> findByPostUserId(Long postUserId);
+
+    List<CareerRequest> findByPostId(Long postId);
 }

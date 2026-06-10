@@ -213,14 +213,20 @@ public class CmsController {
 
         List<SiteStat> dynamicStats = new ArrayList<>();
 
-        // We use a "buffer" for some counts to make them look professional if the
-        // system is new, or just show real data
-        dynamicStats.add(new SiteStat(null, "Alumni Network", alumniCount + "+", 1));
-        dynamicStats.add(new SiteStat(null, "Partner Companies", companyCount + "+", 2));
-        dynamicStats.add(new SiteStat(null, "Countries Reached", locationCount + "+", 3));
+        dynamicStats.add(new SiteStat(null, "Alumni Network", formatStat(alumniCount), 1));
+        dynamicStats.add(new SiteStat(null, "Partner Companies", formatStat(companyCount), 2));
+        dynamicStats.add(new SiteStat(null, "Countries Reached", formatStat(locationCount), 3));
         dynamicStats.add(new SiteStat(null, "Year Founded", "1955", 4));
 
         return ResponseEntity.ok(dynamicStats);
+    }
+
+    private String formatStat(long count) {
+        // Display exact number up to 4 digits, add '+' only after 4 digits (>= 10,000)
+        if (count > 9999) {
+            return count + "+";
+        }
+        return String.valueOf(count);
     }
 
     // ── Home Config ──

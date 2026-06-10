@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import styles from './QuickNote.module.css';
-import newBurst from '../assets/new_burst.svg';
+import newBurst from '../assets/new_burst_proper.png';
 
 const QuickNote = () => {
     const [notes, setNotes] = useState([]);
@@ -11,10 +11,11 @@ const QuickNote = () => {
     const fetchNotes = async (isSilent = false) => {
         if (!isSilent) setLoading(true);
         try {
-            const res = await api.get('/events', { params: { category: 'QUICK_NOTE' } });
-            setNotes(res.data);
+            const res = await api.get('/events', { params: { category: "QUICK_NOTE" } });
+            setNotes(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error('Error fetching quick notes:', err);
+            setNotes([]);
         } finally {
             if (!isSilent) setLoading(false);
         }
@@ -27,12 +28,14 @@ const QuickNote = () => {
     }, []);
 
     // Check if a note is "NEW" (within 30 days)
-    const isNew = (date) => {
-        if (!date) return false;
-        const noteDate = new Date(date);
+    const isNew = (createdAt, eventDate) => {
+        const dateToUse = createdAt || eventDate;
+        if (!dateToUse) return true;
+        const noteDate = new Date(dateToUse);
+        if (isNaN(noteDate.getTime())) return true;
         const now = new Date();
         const diffDays = Math.ceil(Math.abs(now - noteDate) / (1000 * 60 * 60 * 24));
-        return diffDays <= 30;
+        return diffDays <= 60;
     };
 
     if (loading && notes.length === 0) return null;
@@ -46,10 +49,10 @@ const QuickNote = () => {
             <div className={styles.marqueeWrapper}>
                 <div className={styles.marqueeTrack}>
                     <div className={styles.marqueeContent}>
-                        {notes.map((note, i) => (
+                        {Array.isArray(notes) && notes.map((note, i) => (
                             <div key={note.id} className={styles.noteItem}>
                                 <span className={styles.dot}>■</span>
-                                {isNew(note.createdAt) && (
+                                {isNew(note.createdAt, note.eventDate) && (
                                     <img src={newBurst} alt="New" className={styles.newBadgeImg} />
                                 )}
                                 <span className={styles.noteText}>{note.title}: {note.description}</span>
@@ -58,7 +61,7 @@ const QuickNote = () => {
                     </div>
                     {/* Seamless Loop */}
                     <div className={styles.marqueeContent}>
-                        {notes.map((note, i) => (
+                        {Array.isArray(notes) && notes.map((note, i) => (
                             <div key={`loop-${note.id}`} className={styles.noteItem}>
                                 <span className={styles.dot}>■</span>
                                 {isNew(note.createdAt) && (

@@ -5,17 +5,22 @@ import appLogoAsset from "../assets/image.png";
 import { io } from "socket.io-client";
 
 export const DEPARTMENTS = [
-    "CSE Dept",
-    "IT Dept",
-    "ECE Dept",
-    "EE Dept",
-    "EIE Dept",
-    "Mechanical Dept",
-    "Civil Dept",
-    "Chemical Dept",
-    "Alumni Office",
-    "Accounts & Finance",
-    "Training & Placement",
+    "Civil Engineering",
+    "Mechanical Engineering",
+    "Electrical Engineering",
+    "Chemical Engineering",
+    "Electronics & Telecommunication Engineering",
+    "Computer Science & Engineering",
+    "Instrumentation Engineering",
+    "Industrial & Production Engineering",
+    "Electronics & Communication Engineering",
+    "Information Technology",
+    "Mathematics",
+    "Physics",
+    "Chemistry",
+    "Humanities & Social Sciences",
+    "Training & Placement Cell",
+    "Alumni Association",
     "Other"
 ];
 
@@ -36,18 +41,18 @@ function isTokenExpired(token) {
 export function AppProvider({ children }) {
     const [dashboardStats, setDashboardStats] = useState(null);
     const [page, setPage] = useState(() => {
-        const token = localStorage.getItem("token");
-        const user = localStorage.getItem("user");
+        const token = sessionStorage.getItem("token");
+        const user = sessionStorage.getItem("user");
         if (token && user && !isTokenExpired(token)) return "APP";
         return "HOME";
     });
     const [currentUser, setCurrentUser] = useState(() => {
-        const saved = localStorage.getItem("user");
-        const token = localStorage.getItem("token");
+        const saved = sessionStorage.getItem("user");
+        const token = sessionStorage.getItem("token");
         // Clear the session immediately if the token is expired
         if (isTokenExpired(token)) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("user");
             return null;
         }
         return saved ? JSON.parse(saved) : null;
@@ -58,10 +63,10 @@ export function AppProvider({ children }) {
     const [confirmState, setConfirmState] = useState({ show: false, title: "", message: "", onResolve: null });
     const [posts, setPosts] = useState([]);
     const [tab, setTab] = useState(() => {
-        const savedTab = localStorage.getItem("activeTab");
+        const savedTab = sessionStorage.getItem("activeTab");
         if (savedTab) return savedTab;
 
-        const savedUser = localStorage.getItem("user");
+        const savedUser = sessionStorage.getItem("user");
         if (savedUser) {
             const user = JSON.parse(savedUser);
             if (user.role === "ROLE_ALUMNI" || user.role === "ROLE_STUDENT") return "dashboard";
@@ -72,8 +77,13 @@ export function AppProvider({ children }) {
     });
 
     useEffect(() => {
+        window.confirm = () => true;
+        window.alert = () => {};
+    }, []);
+
+    useEffect(() => {
         if (page === "APP") {
-            localStorage.setItem("activeTab", tab);
+            sessionStorage.setItem("activeTab", tab);
         }
     }, [tab, page]);
     const [toast, setToast] = useState(null);
@@ -100,7 +110,7 @@ export function AppProvider({ children }) {
 
     const [aboutContent, setAboutContent] = useState({
         heroTitle: "Built for the community, by the community",
-        heroSub: "AlumniConnect is a dedicated portal that makes it effortless for students to reach the right seniors and for alumni to give back.",
+        heroSub: "AlumniConnect is a dedicated portal that makes it effortless for students to reach the right seniors and for alumni to support their community.",
         missionTitle: "No student should graduate without a network.",
         missionText: "We believe every student deserves access to the wisdom and connections of their seniors. AlumniConnect makes that possible at scale — verified, structured, and meaningful.",
         visionTitle: "Empowering the next generation of global Aecians.",
@@ -136,7 +146,7 @@ export function AppProvider({ children }) {
     const [homeContent, setHomeContent] = useState({
         badge: "🎓 College Alumni Network",
         titleMain: "Connect. Grow.",
-        titleGradient: "Give Back.",
+        titleGradient: "Support Community.",
         subtext: "AecianConnect bridges students with alumni for mentorship, referrals, jobs, and real-world guidance — all on one platform.",
         // bgImages intentionally empty — populated by backend CMS.
         // Keeping it empty means HeroSlider shows a skeleton instead of stock photos.
@@ -155,6 +165,7 @@ export function AppProvider({ children }) {
     const [myNotifications, setMyNotifications] = useState([]);
     const [mentorshipRequests, setMentorshipRequests] = useState([]);
     const [careerRequests, setCareerRequests] = useState([]);
+    const [incomingCareerRequests, setIncomingCareerRequests] = useState([]);
 
     const connectedAlumniIds = [
         ...connections.filter(c => c.status === "ACCEPTED").map(c => c.sender?.id),
@@ -171,7 +182,6 @@ export function AppProvider({ children }) {
                 { key: 'gallery', url: "/cms/gallery", setter: setGalleryImages },
                 { key: 'news', url: "/cms/news", setter: setNewsItems },
                 { key: 'alumni', url: "/cms/notable-alumni", setter: setNotableAlumni },
-                { key: 'giving', url: "/cms/giving-initiatives", setter: setGivingInitiatives },
                 { key: 'services', url: "/cms/alumni-services", setter: setAlumniServices },
                 { key: 'faqs', url: "/cms/faqs", setter: setFaqs },
                 { key: 'socials', url: "/cms/social-links", setter: setSocialLinks },
@@ -190,10 +200,18 @@ export function AppProvider({ children }) {
                 await Promise.allSettled(endpoints.map(async (e) => {
                     try {
                         const res = await api.get(e.url);
-                        e.setter(res.data);
+                        if (e.key === 'footer' || e.key === 'home') {
+                            if (res.data) e.setter(res.data);
+                        } else {
+                            if (Array.isArray(res.data)) {
+                                e.setter(res.data);
+                            } else {
+                                console.warn(`CMS Fetch for ${e.key} returned non-array data:`, res.data);
+                                e.setter([]);
+                            }
+                        }
                     } catch (err) {
                         console.warn(`CMS Fetch failed for ${e.key}:`, err.message);
-                        // If it's the message desk failing on a fresh run, it's expected until backend restart
                     }
                 }));
             } catch (err) {
@@ -236,41 +254,49 @@ export function AppProvider({ children }) {
                 setPosts(postsReq.data);
                 setUsers(alumniReq.data);
 
-                let notifications = connReq.data.filter(c => c.status === "PENDING").map(c => ({
-                    id: `conn-${c.id}`,
-                    senderId: c.sender.id,
-                    userId: currentUser.id,
-                    type: "CONNECTION_REQUEST",
-                    message: `${c.sender.name} sent you a connection request.`,
-                    createdAt: new Date().toISOString(),
-                    read: false
-                }));
+                let notifications = connReq.data
+                    .filter(c => c.status === "PENDING")
+                    .map(c => ({
+                        id: `conn-${c.id}`,
+                        relatedEntityId: c.id,
+                        targetUserId: currentUser.id,
+                        type: "CONNECTION_REQUEST",
+                        message: `${c.sender.name} sent you a connection request.`,
+                        createdAt: new Date().toISOString(),
+                        read: false,
+                        source: "local"
+                    }));
 
-                // Fetch backend notifications for Admins/Super Admins
-                if (currentUser.role === "ROLE_ADMIN" || currentUser.role === "ROLE_SUPER_ADMIN") {
+                if (currentUser.role === "ROLE_ADMIN" || currentUser.role === "ROLE_SUPER_ADMIN" || currentUser.role === "ROLE_ALUMNI") {
                     try {
                         const notifReq = await api.get("/notifications/my-notifications");
                         const backendNotifs = notifReq.data.map(n => ({
                             ...n,
-                            id: n.id, // Keep numeric ID for backend calls
+                            id: n.id,
                             source: "backend"
                         }));
-                        notifications = [...notifications, ...backendNotifs];
+                        notifications = [...backendNotifs, ...notifications];
                     } catch (err) {
                         console.error("Failed to load backend notifications", err);
                     }
                 }
 
+                if (currentUser.role === "ROLE_ADMIN" || currentUser.role === "ROLE_SUPER_ADMIN") {
+                    fetchPendingAlumni();
+                }
+
                 setMyNotifications(notifications);
 
-                // Fetch Mentorship Requests (Incoming & Sent) from Spring Boot backend
-                const [incMent, sentMent, myCareer] = await Promise.all([
+                // Fetch Mentorship Requests (Incoming & Sent) & Career Requests (Incoming & Sent) from Spring Boot backend
+                const [incMent, sentMent, myCareer, incCareer] = await Promise.all([
                     api.get("/mentorship/requests"),
                     api.get("/mentorship/sent"),
-                    api.get("/career/my-requests", { params: { userId: currentUser.id } })
+                    api.get("/career/my-requests", { params: { userId: currentUser.id } }),
+                    api.get("/career/incoming-requests", { params: { userId: currentUser.id } })
                 ]);
                 setMentorshipRequests([...incMent.data, ...sentMent.data]);
                 setCareerRequests(myCareer.data);
+                setIncomingCareerRequests(incCareer.data);
             } catch (err) {
                 console.error("Failed to load user data", err);
             }
@@ -336,6 +362,17 @@ export function AppProvider({ children }) {
             } else if (type === "STATUS_CHANGE") {
                 setCareerRequests(prev => prev.map(r => r.id === request.id ? request : r));
                 notify(`Career request ${request.status.toLowerCase()}!`, request.status === "REFERRED" ? "ok" : "neutral");
+            }
+        });
+
+        newSocket.on("new_registration", (data) => {
+            if (currentUser.role === "ROLE_ADMIN" || currentUser.role === "ROLE_SUPER_ADMIN") {
+                setPendingAlumni(prev => {
+                    // Avoid duplicates if multiple socket events or re-fetches happen
+                    if (prev.find(p => p.id === data.id)) return prev;
+                    return [data, ...prev];
+                });
+                notify("New alumni registration pending approval!", "ok");
             }
         });
 
@@ -564,17 +601,17 @@ export function AppProvider({ children }) {
     }
 
     /* ── Auth ─────────────────────────────────────────── */
-    async function login(email, password) {
+    async function login(email, password, department) {
         try {
-            const res = await api.post("/auth/login", { email, password });
+            const res = await api.post("/auth/login", { email, password, department });
             if (res.data.status === "OTP_REQUIRED") {
                 notify("Login initiated. Please enter the OTP sent to your email.", "ok", true);
                 return { ok: true, otpRequired: true, email: res.data.email };
             }
-            
+
             const { token, ...userData } = res.data;
-            localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("token", token);
+            sessionStorage.setItem("user", JSON.stringify(userData));
             setCurrentUser(userData);
 
             // Redirect based on role
@@ -586,18 +623,19 @@ export function AppProvider({ children }) {
             notify("Login successful!", "ok", true);
             return { ok: true };
         } catch (err) {
-            notify(err.response?.data?.message || "Login failed", "err");
-            return { ok: false };
+            const errMsg = err.response?.data?.message || "Login failed";
+            notify(errMsg, "err", true);
+            return { ok: false, error: errMsg };
         }
     }
 
-    async function confirmLoginOtp(email, otp) {
+    async function confirmLoginOtp(email, otp, department) {
         try {
-            const res = await api.post("/auth/login/verify", { email, otp });
+            const res = await api.post("/auth/login/verify", { email, otp, department });
             const { token, ...userData } = res.data;
-            
-            localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(userData));
+
+            sessionStorage.setItem("token", token);
+            sessionStorage.setItem("user", JSON.stringify(userData));
             setCurrentUser(userData);
 
             // Redirect based on role
@@ -609,18 +647,32 @@ export function AppProvider({ children }) {
             notify("Login successful!", "ok", true);
             return { ok: true };
         } catch (err) {
-            notify(err.response?.data?.message || "Invalid or expired OTP", "err");
-            return { ok: false };
+            const errMsg = err.response?.data?.message || "Invalid or expired OTP";
+            notify(errMsg, "err", true);
+            return { ok: false, error: errMsg };
         }
     }
 
     function logout() {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("activeTab");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("activeTab");
         setCurrentUser(null);
         setPage("HOME");
     }
+
+    const bulkRegisterAlumni = async (data) => {
+        try {
+            const res = await api.post("/admin/bulk-register", data);
+            notify(`${res.data.length} Alumni imported successfully!`, "ok");
+            fetchDirectory(); // Refresh the list
+            return { ok: true };
+        } catch (e) {
+            console.error("Bulk Import Error:", e.response?.data || e.message);
+            notify("Bulk import failed. Check data format.", "err");
+            return { ok: false };
+        }
+    };
 
     const register = async (data) => {
         try {
@@ -649,13 +701,13 @@ export function AppProvider({ children }) {
         }
     };
 
-    async function loginWithGoogle(idToken) {
+    async function loginWithGoogle(idToken, department) {
         try {
-            const res = await api.post("/auth/google", { idToken });
+            const res = await api.post("/auth/google", { idToken, department });
             const { token, ...userData } = res.data;
 
-            localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("token", token);
+            sessionStorage.setItem("user", JSON.stringify(userData));
             setCurrentUser(userData);
 
             // Redirect based on role
@@ -667,8 +719,9 @@ export function AppProvider({ children }) {
             notify("Google login successful!", "ok", true);
             return { ok: true };
         } catch (err) {
-            notify(err.response?.data?.message || "Google login failed", "err");
-            return { ok: false };
+            const errMsg = err.response?.data?.message || "Google login failed";
+            notify(errMsg, "err");
+            return { ok: false, error: errMsg };
         }
     }
 
@@ -697,7 +750,6 @@ export function AppProvider({ children }) {
             setPendingAlumni(prev => prev.filter(u => u.id !== id));
             // Also refresh stats
             fetchDashboardStats();
-            notify("Alumni approved.");
         } catch (err) {
             notify("Approval failed", "err");
         }
@@ -708,7 +760,6 @@ export function AppProvider({ children }) {
             await api.put(`/admin/reject/${id}`);
             setPendingAlumni(prev => prev.filter(u => u.id !== id));
             fetchDashboardStats();
-            notify("Alumni rejected.", "err");
         } catch (err) {
             notify("Rejection failed", "err");
         }
@@ -718,7 +769,7 @@ export function AppProvider({ children }) {
         try {
             const res = await api.put(`/alumni/${currentUser.id}`, data);
             setCurrentUser(prev => ({ ...prev, ...res.data }));
-            localStorage.setItem("user", JSON.stringify({ ...currentUser, ...res.data }));
+            sessionStorage.setItem("user", JSON.stringify({ ...currentUser, ...res.data }));
             notify("Profile updated!");
         } catch (err) {
             notify("Update failed", "err");
@@ -740,18 +791,45 @@ export function AppProvider({ children }) {
         try {
             const res = await api.post("/connections/send", { receiverId });
             setSentConnections(prev => [...prev, res.data]);
+            const receiver = users.find(u => u.id === receiverId);
+            setMyNotifications(prev => [{
+                id: `local-conn-send-${res.data.id}`,
+                relatedEntityId: res.data.id,
+                targetUserId: currentUser.id,
+                type: "CONNECTION_REQUEST",
+                message: `Connection request sent to ${receiver?.name || "an alumni"}. Waiting for response.`,
+                createdAt: new Date().toISOString(),
+                read: false,
+                source: "local"
+            }, ...prev]);
             playSound("sent");
             notify("Connection request sent!");
         } catch (err) {
-            const msg = err.response?.data || "Failed to send connection request";
+            const msg = err.response?.data?.message || err.response?.data || "Failed to send connection request";
             notify(typeof msg === "string" ? msg : "Request already sent", "err");
         }
     }
 
     async function handleConnectionResponse(connId, status) {
         try {
-            await api.put(`/connections/${connId}`, { status });
-            setConnections(prev => prev.map(c => c.id === connId ? { ...c, status } : c));
+            const res = await api.put(`/connections/${connId}`, { status });
+            setConnections(prev => prev.map(c => c.id === connId ? res.data : c));
+            setSentConnections(prev => prev.map(c => c.id === connId ? res.data : c));
+            const connection = res.data;
+            const sender = connection?.sender;
+            const receiver = connection?.receiver;
+            setMyNotifications(prev => [{
+                id: `local-conn-${status.toLowerCase()}-${connId}`,
+                relatedEntityId: connId,
+                targetUserId: currentUser.id,
+                type: status === "ACCEPTED" ? "CONNECTION_ACCEPTED" : "CONNECTION_REJECTED",
+                message: status === "ACCEPTED"
+                    ? `You accepted the connection request from ${sender?.name || "an alumni"}.`
+                    : `You declined the connection request from ${sender?.name || "an alumni"}.`,
+                createdAt: new Date().toISOString(),
+                read: false,
+                source: "local"
+            }, ...prev]);
             if (status === "ACCEPTED") playSound("success");
             else playSound("neutral");
             notify(`Connection ${status.toLowerCase()}.`);
@@ -835,6 +913,7 @@ export function AppProvider({ children }) {
                 params: { status }
             });
             setCareerRequests(prev => prev.map(r => r.id === requestId ? res.data : r));
+            setIncomingCareerRequests(prev => prev.map(r => r.id === requestId ? res.data : r));
             notify(`Request status updated to ${status.toLowerCase()}.`);
         } catch (err) {
             notify("Action failed", "err");
@@ -896,8 +975,12 @@ export function AppProvider({ children }) {
         try {
             await api.put(`/superadmin/revoke-admin/${userId}`);
             notify("Administrative access revoked. User returned to Alumnus status.", "ok");
-            await fetchAdmins();
-            await fetchDirectory(); // Refresh directory to show them as Alumnus again
+            if (String(userId) === String(currentUser?.id)) {
+                logout();
+            } else {
+                await fetchAdmins();
+                await fetchDirectory(); // Refresh directory to show them as Alumnus again
+            }
             return { ok: true };
         } catch (err) {
             notify(err.response?.data?.message || "Failed to revoke access", "err");
@@ -944,7 +1027,7 @@ export function AppProvider({ children }) {
 
     async function fetchAlumniOnly() {
         try {
-            const res = await api.get("/alumni"); 
+            const res = await api.get("/alumni");
             // AlumniService already filters for ROLE_ALUMNI and APPROVED, 
             // but we'll double check here just in case.
             return res.data.filter(u => u.role === "ROLE_ALUMNI");
@@ -989,35 +1072,46 @@ export function AppProvider({ children }) {
             await api.put(`/superadmin/promote/${id}`);
             notify("User promoted to Super Admin!", "ok");
             fetchAdmins(); // Refresh list to reflect changes
+            return true;
         } catch (err) {
             notify(err.response?.data?.message || "Promotion failed", "err");
+            return false;
         }
     }
 
     async function deleteUser(id) {
         try {
             await api.delete(`/admin/users/${id}`);
-            setUsers(prev => prev.filter(u => u.id !== id));
-            notify("User account removed.");
+            if (String(id) === String(currentUser?.id)) {
+                logout();
+            } else {
+                setUsers(prev => prev.filter(u => u.id !== id));
+                await fetchAdmins();
+            }
         } catch (err) {
-            notify("Failed to delete user", "err");
+            notify(err.response?.data?.message || "Failed to delete user", "err");
         }
     }
 
+
+
+
     /* ── Data Export ──────────────────────────────────── */
-    async function exportAlumni() {
+    async function exportAlumni(dept = null) {
         try {
-            // Restrict export to super admin only
-            if (currentUser?.role !== "ROLE_SUPER_ADMIN") {
-                notify("Access denied: Only Super Admin can export user data", "err");
+            // Restrict export to super admin or admin
+            if (currentUser?.role !== "ROLE_SUPER_ADMIN" && currentUser?.role !== "ROLE_ADMIN") {
+                notify("Access denied: Only Administrators can export user data", "err");
                 return;
             }
 
-            const res = await api.get("/admin/export", { responseType: "blob" });
+            const params = dept ? { dept } : {};
+            const res = await api.get("/admin/export", { params, responseType: "blob" });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", `alumni_data_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            const filename = dept ? `alumni_${dept}_${new Date().toISOString().slice(0, 10)}.xlsx` : `alumni_all_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            link.setAttribute("download", filename);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -1039,17 +1133,7 @@ export function AppProvider({ children }) {
 
     /* ── Confirmation Modal System ──────────────────────── */
     const confirm = (title, message) => {
-        return new Promise((resolve) => {
-            setConfirmState({
-                show: true,
-                title,
-                message,
-                onResolve: (val) => {
-                    setConfirmState({ show: false, title: "", message: "", onResolve: null });
-                    resolve(val);
-                }
-            });
-        });
+        return Promise.resolve(true);
     };
 
     return (
@@ -1071,7 +1155,7 @@ export function AppProvider({ children }) {
             fetchEventRegistrations, deleteEventRegistration,
             eventRegistrations,
             fetchAdmins, admins, revokeAdminAccess, promoteAdmin, updateAdminDepartment, updateUserDepartment,
-            deleteUser, deletePost, exportAlumni,
+            deleteUser, deletePost, exportAlumni, bulkRegisterAlumni,
             connections, messages, myNotifications, connectedAlumniIds, sentConnections,
             galleryImages, aboutContent, contactInfo, homeContent,
             newsItems, notableAlumni, givingInitiatives, alumniServices, messageDeskItems,
@@ -1083,7 +1167,7 @@ export function AppProvider({ children }) {
             handleConnectionResponse, sendConnectionRequest, sendMessage,
             markNotificationRead, clearNotifications,
             mentorshipRequests, sendMentorshipRequest, respondToMentorship,
-            careerRequests, sendCareerRequest, respondToCareerRequest,
+            careerRequests, incomingCareerRequests, sendCareerRequest, respondToCareerRequest,
             notify, confirm, confirmState
         }}>
             {children}

@@ -19,4 +19,5 @@ public class RegisterRequest {
     private String location;
     private String techStack;
     private String linkedinUrl;
+    private String department;
 }

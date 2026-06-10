@@ -106,6 +106,7 @@ public class EventController {
         return ResponseEntity.ok(eventRepository.save(event));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id,
             org.springframework.security.core.Authentication auth) {
@@ -120,6 +121,9 @@ public class EventController {
                 }
             }
         }
+
+        // Clean up associated registrations first
+        eventRegistrationRepository.deleteAll(eventRegistrationRepository.findByEventId(id));
 
         eventRepository.deleteById(id);
         return ResponseEntity.ok().build();

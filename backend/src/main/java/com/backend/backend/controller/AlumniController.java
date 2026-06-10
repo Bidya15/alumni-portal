@@ -39,7 +39,7 @@ public class AlumniController {
         
         if (auth != null) {
             User currentUser = userRepository.findByEmail(auth.getName()).orElse(null);
-            if (currentUser != null && currentUser.getRole() == User.Role.ROLE_ADMIN) {
+            if (currentUser != null && (currentUser.getRole() == User.Role.ROLE_ADMIN || currentUser.getRole() == User.Role.ROLE_ALUMNI)) {
                 filterDept = currentUser.getDepartment();
             }
         }

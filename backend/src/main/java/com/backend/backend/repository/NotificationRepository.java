@@ -8,6 +8,9 @@ import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByTargetRoleAndRead(User.Role targetRole, boolean read);
+    List<Notification> findByTargetUserIdAndRead(Long targetUserId, boolean read);
 
-    Optional<Notification> findByRelatedEntityIdAndType(Long relatedEntityId, Notification.Type type);
+    List<Notification> findByRelatedEntityIdAndType(Long relatedEntityId, Notification.Type type);
+
+    List<Notification> findByTargetUserId(Long targetUserId);
 }

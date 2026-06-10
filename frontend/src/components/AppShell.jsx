@@ -8,15 +8,15 @@ import Register from "../pages/Register";
 import ChatView from "./ChatView";
 import NotificationsView from "./NotificationsView";
 import Gallery from "../pages/Gallery";
-import Donate from "../pages/Donate";
 import ForgotPassword from "../pages/ForgotPassword";
 import Privacy from "../pages/Privacy";
 import Terms from "../pages/Terms";
 import styles from "./AppShell.module.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 
 // ─── Admin sub-views ─────────────────────────────────
-import { Overview, Pending, ManageAlumni, ManagePosts, Export } from "../dashboard/Admin";
+import { Overview, Pending, ManageAlumni, ManagePosts, Export, AlumniCentral } from "../dashboard/Admin";
 import ManageEvents from "../cms/ManageEvents";
 import AdminProfile from "../dashboard/AdminProfile";
 import EmailCampaign from "../dashboard/EmailCampaign";
@@ -25,7 +25,7 @@ import EmailCampaign from "../dashboard/EmailCampaign";
 import AlumniDashboard from "../dashboard/AlumniDashboard";
 import NetworkingHub from "../dashboard/NetworkingHub";
 import JobPortal from "../dashboard/JobPortal";
-import { Feed as AlumniFeed, Directory as AlumniDirectory, Profile as AlumniProfile } from "../dashboard/Alumni";
+import { Feed as AlumniFeed, Profile as AlumniProfile } from "../dashboard/Alumni";
 import AlumniServices from "../dashboard/AlumniServices";
 import EventsView from "../dashboard/EventsView";
 import FeedbackView from "../dashboard/FeedbackView";
@@ -33,7 +33,6 @@ import FeedbackView from "../dashboard/FeedbackView";
 // ─── Super Admin sub-views ───────────────────────────
 import { ManageAdmins } from "../dashboard/SuperAdmin";
 import ContentManagement from "../cms/ContentManagement";
-import GivingHub from "../dashboard/GivingHub";
 
 // ─── Page titles ─────────────────────────────────────
 const PAGE_TITLE = {
@@ -64,15 +63,12 @@ const PAGE_TITLE = {
         feed: { h: "Alumni Feed", sub: "Stay updated with latest posts and discussions" },
         "networking-hub": { h: "Networking Hub", sub: "Connect with fellow alumni, mentors, and faculty" },
         "job-portal": { h: "Job Portal", sub: "Find your next career opportunity" },
-        directory: { h: "Alumni Directory", sub: "Browse and connect with verified alumni" },
         messages: { h: "Messages", sub: "Direct communication with your connections" },
         notifications: { h: "Notifications", sub: "Stay up to date with alerts" },
         giving: { h: "Giving Hub", sub: "Support university growth and institutional initiatives" },
         events: { h: "Events & Reunions", sub: "Stay updated with latest happenings" },
-        "success-stories": { h: "Success Stories", sub: "Inspiring alumni achievements" },
         profile: { h: "My Profile", sub: "Manage your public alumni presence" },
         services: { h: "Alumni Services", sub: "Digital ID and official document requests" },
-        feedback: { h: "Alumni Feedback", sub: "Share your thoughts with the community" },
     },
 };
 
@@ -81,48 +77,38 @@ function renderTab(role, tab) {
     if (role === "ROLE_SUPER_ADMIN") {
         if (tab === "manage-admins") return <ManageAdmins />;
         if (tab === "overview") return <Overview />;
-        if (tab === "pending") return <Pending />;
-        if (tab === "manage") return <ManageAlumni />;
-        if (tab === "posts") return <ManagePosts />;
+        if (tab === "alumni-central") return <AlumniCentral />;
         if (tab === "events") return <ManageEvents />;
         if (tab === "export") return <Export />;
         if (tab === "messages") return <ChatView />;
         if (tab === "notifications") return <NotificationsView />;
         if (tab === "content-management") return <ContentManagement />;
-        if (tab === "giving") return <GivingHub />;
         if (tab === "profile") return <AdminProfile />;
         if (tab === "email-campaign") return <EmailCampaign />;
     }
     if (role === "ROLE_ADMIN") {
         // Strict guard: Dept Admins cannot access Super Admin tabs
-        const allowed = ["overview", "pending", "manage", "posts", "events", "notifications", "giving", "services", "profile", "email-campaign"];
+        const allowed = ["overview", "alumni-central", "events", "notifications", "profile", "email-campaign", "messages"];
         if (!allowed.includes(tab)) return <Overview />; // Default to safe overview
 
         if (tab === "overview") return <Overview />;
-        if (tab === "pending") return <Pending />;
-        if (tab === "manage") return <ManageAlumni />;
-        if (tab === "posts") return <ManagePosts />;
+        if (tab === "alumni-central") return <AlumniCentral />;
         if (tab === "events") return <ManageEvents />;
         if (tab === "notifications") return <NotificationsView />;
-        if (tab === "giving") return <GivingHub />;
         if (tab === "services") return <AlumniServices />;
         if (tab === "profile") return <AdminProfile />;
         if (tab === "email-campaign") return <EmailCampaign />;
+        if (tab === "messages") return <ChatView />;
     }
     if (role === "ROLE_ALUMNI") {
         if (tab === "dashboard") return <AlumniDashboard />;
         if (tab === "feed") return <AlumniFeed />;
         if (tab === "networking-hub") return <NetworkingHub />;
-        if (tab === "job-portal") return <JobPortal />;
-        if (tab === "directory") return <AlumniDirectory />;
         if (tab === "messages") return <ChatView />;
         if (tab === "notifications") return <NotificationsView />;
-        if (tab === "giving") return <GivingHub />;
         if (tab === "events") return <EventsView />;
-        if (tab === "success-stories") return <AlumniFeed isSuccessStories={true} />;
         if (tab === "profile") return <AlumniProfile />;
         if (tab === "services") return <AlumniServices />;
-        if (tab === "feedback") return <FeedbackView />;
     }
     return null;
 }
@@ -149,45 +135,19 @@ const toastVariants = {
 // ─── App Shell ───────────────────────────────────────
 function AppShell() {
     const { page, currentUser, toast, tab, sidebarOpen, theme, toggleTheme } = useApp();
+    const { toggleSidebar } = useApp(); // Access toggleSidebar if needed, though it's used below
 
-    // Public pages with fade-slide transition
-    if (page === "HOME" || page === "ABOUT" || page === "GALLERY" || page === "DONATE" || page === "CONTACT" || page === "LOGIN" || page === "REGISTER" || page === "FORGOT_PASSWORD" || page === "PRIVACY" || page === "TERMS") {
-        return (
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={page}
-                    variants={pageVariants}
-                    initial="initial"
-                    animate="enter"
-                    exit="exit"
-                    style={{ minHeight: "100vh" }}
-                >
-                    {page === "HOME" && <Home />}
-                    {page === "ABOUT" && <About />}
-                    {page === "GALLERY" && <Gallery isPublic />}
-                    {page === "DONATE" && <Donate />}
-                    {page === "CONTACT" && <Contact />}
-                    {page === "LOGIN" && <Login />}
-                    {page === "REGISTER" && <Register />}
-                    {page === "FORGOT_PASSWORD" && <ForgotPassword />}
-                    {page === "PRIVACY" && <Privacy />}
-                    {page === "TERMS" && <Terms />}
-                </motion.div>
-            </AnimatePresence>
-        );
-    }
+    // Always scroll to top on page or tab change
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+    }, [page, tab]);
 
+    const isPublic = page === "HOME" || page === "ABOUT" || page === "GALLERY" || page === "CONTACT" || page === "LOGIN" || page === "REGISTER" || page === "FORGOT_PASSWORD" || page === "PRIVACY" || page === "TERMS";
     const role = currentUser?.role;
     const meta = PAGE_TITLE[role]?.[tab] || { h: "AlumniConnect", sub: "" };
 
     return (
-        <div className={`${styles.appShell}${sidebarOpen ? "" : ` ${styles.sidebarCollapsed}`}`}>
-            {/* ── Backdrop for Mobile ── */}
-            <div
-                className={`${styles.backdrop} ${sidebarOpen ? styles.active : ""}`}
-                onClick={() => sidebarOpen && toggleSidebar()}
-            />
-
+        <>
             {/* ── Animated Toast ── */}
             <AnimatePresence>
                 {toast && (
@@ -204,56 +164,87 @@ function AppShell() {
                 )}
             </AnimatePresence>
 
-            <Sidebar />
-
-            <div className={styles.mainContent}>
-                {/* ── Animated Header ── */}
+            {isPublic ? (
                 <AnimatePresence mode="wait">
-                    <motion.header
-                        key={tab}
-                        className={styles.topHeader}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
+                    <motion.div
+                        key={page}
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="enter"
+                        exit="exit"
+                        style={{ minHeight: "100vh" }}
                     >
-                        <div className={styles.topHeaderLeft}>
-                            <h1>{meta.h}</h1>
-                            {meta.sub && <p>{meta.sub}</p>}
-                        </div>
-                        <div className={styles.topHeaderRight}>
-                            <span className={styles.dateText}>
-                                {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
-                            </span>
-                            <motion.button
-                                className={styles.themeBtn}
-                                onClick={toggleTheme}
-                                title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-                                whileHover={{ scale: 1.15, rotate: 15 }}
-                                whileTap={{ scale: 0.85, rotate: -10 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                            >
-                                {theme === "light" ? "🌙" : "☀️"}
-                            </motion.button>
-                        </div>
-                    </motion.header>
+                        {page === "HOME" && <Home />}
+                        {page === "ABOUT" && <About />}
+                        {page === "GALLERY" && <Gallery isPublic />}
+                        {page === "CONTACT" && <Contact />}
+                        {page === "LOGIN" && <Login />}
+                        {page === "REGISTER" && <Register />}
+                        {page === "FORGOT_PASSWORD" && <ForgotPassword />}
+                        {page === "PRIVACY" && <Privacy />}
+                        {page === "TERMS" && <Terms />}
+                    </motion.div>
                 </AnimatePresence>
+            ) : (
+                <div className={`${styles.appShell}${sidebarOpen ? "" : ` ${styles.sidebarCollapsed}`}`}>
+                    {/* ── Backdrop for Mobile ── */}
+                    <div
+                        className={`${styles.backdrop} ${sidebarOpen ? styles.active : ""}`}
+                        onClick={() => sidebarOpen && toggleSidebar()}
+                    />
 
-                {/* ── Animated Tab Content ── */}
-                <div className={styles.pageBody}>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={tab}
-                            variants={tabVariants}
-                            initial="initial"
-                            animate="enter"
-                            exit="exit"
-                        >
-                            {renderTab(role, tab)}
-                        </motion.div>
-                    </AnimatePresence>
+                    <Sidebar />
+
+                    <div className={styles.mainContent}>
+                        {/* ── Animated Header ── */}
+                        <AnimatePresence mode="wait">
+                            <motion.header
+                                key={tab}
+                                className={styles.topHeader}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                            >
+                                <div className={styles.topHeaderLeft}>
+                                    <h1>{meta.h}</h1>
+                                    {meta.sub && <p>{meta.sub}</p>}
+                                </div>
+                                <div className={styles.topHeaderRight}>
+                                    <span className={styles.dateText}>
+                                        {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                                    </span>
+                                    <motion.button
+                                        className={styles.themeBtn}
+                                        onClick={toggleTheme}
+                                        title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+                                        whileHover={{ scale: 1.15, rotate: 15 }}
+                                        whileTap={{ scale: 0.85, rotate: -10 }}
+                                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                                    >
+                                        {theme === "light" ? "🌙" : "☀️"}
+                                    </motion.button>
+                                </div>
+                            </motion.header>
+                        </AnimatePresence>
+
+                        {/* ── Animated Tab Content ── */}
+                        <div className={styles.pageBody}>
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={tab}
+                                    variants={tabVariants}
+                                    initial="initial"
+                                    animate="enter"
+                                    exit="exit"
+                                >
+                                    {renderTab(role, tab)}
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </>
     );
 }
 

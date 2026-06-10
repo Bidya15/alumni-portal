@@ -47,6 +47,7 @@ public class User {
     private Status status;
 
     private LocalDateTime createdAt;
+    private LocalDateTime lastLoginAt;
 
     @PrePersist
     protected void onCreate() {

@@ -80,7 +80,7 @@ export default function Footer() {
                             ) : null}
                             {footerConfig.appName || "AecianConnect"}
                         </div>
-                        <p className={s.desc}>The premier gateway for college alumni to post jobs, mentorship signals, and give back to their alma mater's student community.</p>
+                        <p className={s.desc}>The premier gateway for college alumni to post jobs, mentorship signals, and support their alma mater's student community.</p>
                         <div className={s.socials}>
                             {displaySocials.map(soc => (
                                 <a key={soc.id || soc.platform} href={soc.url} className={s.socLink} target="_blank" rel="noopener noreferrer" title={soc.platform} data-platform={soc.platform.toLowerCase()}>
@@ -132,8 +132,12 @@ export default function Footer() {
                 </div>
 
                 <div className={s.bottom}>
-                    <p>© {new Date().getFullYear()} {footerConfig.appName || "AecianConnect"} · Built with ❤️ by the Alumni Association</p>
+                    <p>© {new Date().getFullYear()} {footerConfig.appName || "AecianConnect"} · Built with ❤️ for the Alumni Association
+                    </p>
+                    <p>Developed by <a href="#">Bidya SR</a> , <a href="#">Rishov B</a> & <a href="#">Sosangkar S</a></p>
+                    <p>Batch: 2023-2027</p>
                 </div>
+
             </div>
         </footer>
     );

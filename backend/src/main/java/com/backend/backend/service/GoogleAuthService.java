@@ -27,7 +27,7 @@ public class GoogleAuthService {
                 .build();
     }
 
-    public Optional<User> verifyAndGetUser(String idTokenString) {
+    public Optional<User> verifyAndGetUser(String idTokenString, String department) {
         try {
             GoogleIdToken idToken = verifier.verify(idTokenString);
             if (idToken != null) {
@@ -48,6 +48,7 @@ public class GoogleAuthService {
                         .role(User.Role.ROLE_ALUMNI)
                         .status(User.Status.PENDING)
                         .profileImage(pictureUrl)
+                        .department(department)
                         .build();
 
                 return Optional.of(userRepository.save(newUser));

@@ -5,7 +5,7 @@ import AvatarImg from "../components/AvatarImg";
 import styles from "./AlumniServices.module.css";
 
 export default function AlumniServices() {
-    const { alumniServices, updateServices, currentUser, page, notify } = useApp();
+    const { alumniServices, updateServices, currentUser, page, notify, confirm } = useApp();
     const isSuper = currentUser?.role === "ROLE_SUPER_ADMIN" && page === "APP";
 
     const [modal, setModal] = useState(null); // { mode: 'add'|'edit', item: service }
@@ -78,11 +78,11 @@ export default function AlumniServices() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className={styles.cardBtnRow}>
                         <button className="btn btn-primary flex-1" onClick={() => notify("Downloading Digital ID Card...")}>
                             Download ID (PDF)
                         </button>
-                        <button className="btn btn-outline" onClick={() => notify("Physical card request sent!")}>
+                        <button className="btn btn-outline flex-1" onClick={() => notify("Physical card request sent!")}>
                             Order Physical Card
                         </button>
                     </div>
@@ -107,7 +107,7 @@ export default function AlumniServices() {
                                     {isSuper && (
                                         <div className={styles.serviceActions}>
                                             <button className={styles.actionBtn} onClick={() => startEdit(service)}>✎</button>
-                                            <button className={`${styles.actionBtn} ${styles.del}`} onClick={() => deleteItem(service.id)}>✕</button>
+                                            <button className={`${styles.actionBtn} ${styles.del}`} onClick={() => handleDelete(service.id)}>✕</button>
                                         </div>
                                     )}
                                 </div>

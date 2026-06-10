@@ -22,7 +22,6 @@ export default function PublicNav({ activePage }) {
         { label: "Home", page: "HOME" },
         { label: "About", page: "ABOUT" },
         { label: "Gallery", page: "GALLERY" },
-        { label: "Donate", page: "DONATE" },
         { label: "Contact", page: "CONTACT" },
     ];
 

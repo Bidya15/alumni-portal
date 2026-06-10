@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "../utils/api";
 import { useApp } from "../context/AppContext";
 import styles from "./EventsPanel.module.css";
-import newBurst from "../assets/new_burst.svg";
+import newBurst from "../assets/new_burst_proper.png";
 
 /* ── Animated Modal Wrapper (Internal to component) ── */
 function AnimatedModal({ onClose, children }) {
@@ -147,13 +147,20 @@ function EventsPanel({
     };
 
     // Helper to check if event is "NEW" (e.g. within last 30 days)
-    const isNew = (createdAt) => {
-        if (!createdAt) return false;
-        const createdDate = new Date(createdAt);
+    const isNew = (createdAt, eventDate) => {
+        // Fallback to eventDate if createdAt is missing
+        const dateToUse = createdAt || eventDate;
+        if (!dateToUse) return true;
+
+        const createdDate = new Date(dateToUse);
+        if (isNaN(createdDate.getTime())) return true;
+
         const now = new Date();
         const diffTime = Math.abs(now - createdDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 30;
+
+        // Show as NEW if created or happening within 60 days
+        return diffDays <= 60;
     };
 
     if (loading) {
@@ -229,7 +236,7 @@ function EventsPanel({
                                 onClick={() => setSelectedEvent(ev)}
                             >
                                 <div className={styles.marqueeHeader}>
-                                    {isNew(ev.createdAt) && (
+                                    {isNew(ev.createdAt, ev.eventDate) && (
                                         <img src={newBurst} alt="New" className={styles.newBadgeImg} />
                                     )}
                                     <h3 className={styles.marqueeTitle}>{ev.title}</h3>
@@ -351,7 +358,7 @@ function EventsPanel({
                             <div className={styles.timelineContent}>
                                 <div className={styles.dateBadge} style={{ overflow: 'visible' }}>
                                     <span className={styles.calendarIcon}>📅</span> {ev.eventDate}
-                                    {isNew(ev.createdAt) && (
+                                    {isNew(ev.createdAt, ev.eventDate) && (
                                         <div className={styles.newBadgeImgWrapper}>
                                             <img src={newBurst} alt="New" className={styles.newBadgeImg} />
                                         </div>

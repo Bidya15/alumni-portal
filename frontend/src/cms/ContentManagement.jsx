@@ -15,7 +15,7 @@ import ManageEvents from "./ManageEvents";
 import ManageCoordinators from "./ManageCoordinators";
 import ManageTestimonials from "./ManageTestimonials";
 import ManageMessages from "./ManageMessages";
-import { Pending, ManageAlumni, ManagePosts } from "../dashboard/Admin";
+import { Pending, ManageAlumni, ManagePosts, DraggableBox } from "../dashboard/Admin";
 import styles from "../dashboard/dashboard.module.css";
 
 export default function ContentManagement() {
@@ -74,7 +74,7 @@ export default function ContentManagement() {
                 </div>
             </div>
 
-            <div className={styles.cmNav}>
+            <DraggableBox className={styles.cmNav}>
                 {SUB_TABS.map(tab => (
                     <button
                         key={tab.id}
@@ -85,7 +85,7 @@ export default function ContentManagement() {
                         {tab.label}
                     </button>
                 ))}
-            </div>
+            </DraggableBox>
 
             <div className={styles.cmViewPort}>
                 {renderContent()}

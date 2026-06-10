@@ -20,6 +20,53 @@
     gap: 8px;
 }
 
+/* ─── Profile Sub-Navigation ─── */
+.profileSubnav {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    overflow-x: auto;
+}
+
+.subnavBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-500);
+    border-bottom: 2px solid transparent;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.subnavBtn:hover {
+    color: var(--gray-900);
+}
+
+.subnavBtn.active {
+    color: var(--indigo);
+    border-bottom-color: var(--indigo);
+}
+
+.subnavBadge {
+    background: var(--red-500);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+}
+
 /* ─── Form Grid (2-col auto layout) ─────────────── */
 .formGrid {
     display: grid;
@@ -67,6 +114,35 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* ─── Input Icon Toggles (Password Eye) ─── */
+.inpWithIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inpIconBtn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.inpIconBtn:hover {
+    color: var(--indigo);
+    background: var(--gray-100);
+}
+
 /* ─── Table Wrapper ──────────────────────────────── */
 .tableWrap {
     overflow-x: auto;
@@ -81,7 +157,7 @@
 }
 
 .table th {
-    background: var(--gray-50);
+    background: var(--gray-100);
     padding: 12px 16px;
     text-align: left;
     font-size: 11px;
@@ -104,7 +180,7 @@
 }
 
 .table tbody tr:hover td {
-    background: var(--gray-50);
+    background: var(--gray-100);
 }
 
 /* ─── Action Buttons ─────────────────────────────── */
@@ -133,6 +209,37 @@
     transform: none;
 }
 
+.btnSecondary {
+    background: var(--surface);
+    color: var(--gray-700);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.btnSecondary:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.btnSmall {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+
+.tdActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
 .btnDanger {
     background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
@@ -154,7 +261,7 @@
 
 /* ─── Pending Banner ──────────────────────────────── */
 .pendingBanner {
-    background: linear-gradient(to right, var(--indigo-50), white);
+    background: linear-gradient(to right, var(--indigo-50), var(--surface));
     border: 1px solid var(--indigo-l);
     border-left: 5px solid var(--indigo);
     border-radius: var(--r-md);
@@ -351,7 +458,7 @@
 }
 
 .postPreview {
-    background: var(--gray-50);
+    background: var(--gray-100);
     border-radius: 8px;
     padding: 12px 14px;
     margin-bottom: 18px;
@@ -525,7 +632,7 @@
 
 .reqCardMessage {
     margin-top: 12px;
-    background: var(--gray-50);
+    background: var(--gray-100);
     border-radius: 8px;
     padding: 10px 14px;
     font-size: 13px;
@@ -739,7 +846,7 @@
     padding: 6px 12px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: white;
+    background: var(--surface);
     color: var(--gray-600);
     font-size: 12px;
     font-weight: 500;
@@ -766,7 +873,7 @@
     border: 2px dashed var(--gray-300);
     border-radius: 8px;
     padding: 1rem;
-    background: var(--gray-50);
+    background: var(--gray-100);
     min-height: 120px;
     max-height: 220px;
     display: flex;
@@ -856,7 +963,7 @@
 }
 
 .glassStatCard {
-    background: #fff;
+    background: var(--surface);
     padding: 24px;
     border-radius: 18px;
     border: 1px solid var(--border-lt);
@@ -962,7 +1069,7 @@
 }
 
 .contentBox {
-    background: #fff;
+    background: var(--surface);
     border-radius: 20px;
     padding: 24px;
     border: 1px solid var(--border-lt);
@@ -989,12 +1096,12 @@
     align-items: center;
     gap: 15px;
     padding: 12px;
-    border-bottom: 1px solid var(--gray-50);
+    border-bottom: 1px solid var(--border-lt);
     transition: background 0.2s;
 }
 
 .recentUserItem:hover {
-    background: var(--gray-50);
+    background: var(--sidebar-hover);
 }
 
 .recentUserInfo {
@@ -1021,7 +1128,7 @@
     display: flex;
     justify-content: space-between;
     padding: 10px 14px;
-    background: var(--gray-50);
+    background: var(--gray-100);
     border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
@@ -1410,7 +1517,7 @@
 }
 
 .adminCount {
-    background: var(--indigo-l);
+    background: var(--sidebar-active);
     color: var(--indigo);
     padding: 4px 12px;
     border-radius: 20px;
@@ -1432,7 +1539,7 @@
 }
 
 .maTable th {
-    background: var(--gray-50);
+    background: var(--gray-100);
     padding: 12px 24px;
     text-align: left;
     font-size: 11px;
@@ -1443,6 +1550,19 @@
 }
 
 .maTable td {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-lt);
+}
+
+.maListWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.maListItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 16px 24px;
     border-bottom: 1px solid var(--border-lt);
 }
@@ -1463,7 +1583,7 @@
     font-size: 11px;
     font-weight: 700;
     color: var(--indigo);
-    background: var(--indigo-l);
+    background: var(--sidebar-active);
     padding: 2px 6px;
     border-radius: 4px;
     margin-top: 2px;
@@ -1475,9 +1595,92 @@
     color: var(--gray-600);
 }
 
-@media (max-width: 1024px) {
+.maActionCell {
+    text-align: right;
+}
+
+.maActionWrapper {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .maContainer {
+        padding: 0 8px;
+    }
     .maGrid {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .maCard {
+        padding: 20px 14px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .maForm {
+        width: 100%;
+    }
+    .maTable th, .maTable td {
+        padding: 12px 8px !important;
+        text-align: center !important;
+    }
+    .maTableHeader {
+        padding: 15px !important;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+    }
+    .maTableSub {
+        margin-bottom: 5px;
+    }
+    .maUserCell {
+        gap: 8px;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+    .maUserName {
+        font-size: 13px;
+    }
+    .maUserRole {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+    .maCardTitle {
+        margin-top: 15px;
+        text-align: center;
+        width: 100%;
+    }
+    .maCardSub {
+        margin-bottom: 12px;
+        text-align: center;
+        width: 100%;
+    }
+    .maCardTab {
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 4px;
+        padding: 2px 8px;
+    }
+    .maActionCell {
+        text-align: center !important;
+        width: 100%;
+    }
+    .maActionWrapper {
+        justify-content: center !important;
+        width: 100%;
+    }
+    .maListItem {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px 15px;
+        text-align: center;
     }
 }
 
@@ -1616,7 +1819,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--gray-50);
+    background: var(--gray-100);
     padding: 1rem 1.25rem;
     border-radius: 14px;
     border: 1px solid var(--border-lt);
@@ -1787,7 +1990,7 @@
 
 .modalFooter {
     padding: 16px 24px;
-    background: var(--gray-50);
+    background: var(--gray-100);
     border-top: 1px solid var(--border-lt);
     display: flex;
     justify-content: flex-end;
@@ -1805,3 +2008,105 @@
         transform: translateY(0) scale(1);
     }
 }
+
+/* ─── Alumni Central Hub ─── */
+.hubGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.hubSection {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-lt);
+    box-shadow: var(--shadow-sm);
+    min-width: 0; /* Important for grid items with tables */
+}
+
+.hubSectionTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 1400px) {
+    .hubGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .hubSection {
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
+    .hubSectionTitle {
+        font-size: 16px;
+        margin-bottom: 16px;
+        justify-content: center;
+    }
+
+    /* ─── Content Management Mobile Overrides ─── */
+    .cmHeader {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+        padding-bottom: 20px;
+    }
+    .cmTitle {
+        font-size: 1.3rem;
+    }
+    .cmSub {
+        font-size: 0.85rem;
+    }
+    .cmNav {
+        margin-bottom: 20px !important;
+        gap: 8px !important;
+    }
+    .cmNavBtn {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        border-radius: 10px !important;
+    }
+    .cmViewPort {
+        padding: 15px 10px !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Global size reduction for mobile dashboard */
+    .innerCard {
+        padding: 15px 10px !important;
+    }
+    .cardTitle {
+        font-size: 1.1rem !important;
+        margin-bottom: 15px !important;
+        justify-content: center !important;
+    }
+    .label {
+        font-size: 11px !important;
+    }
+    .inp {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+    .btnPrimary, .btnSecondary {
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+    }
+
+    .sectionHeaderWrap {
+        text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+}
+

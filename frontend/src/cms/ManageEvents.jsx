@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import api from "../utils/api";
 import ImageUpload from "../components/ImageUpload";
 import s from "../dashboard/dashboard.module.css";
+import { DraggableBox } from "../dashboard/Admin";
 
 export default function ManageEvents() {
     const { fetchEventRegistrations, eventRegistrations, deleteEventRegistration, notify } = useApp();
@@ -167,7 +168,7 @@ export default function ManageEvents() {
                 </div>
             </form>
 
-            <div className={s.tableWrap}>
+            <DraggableBox className={s.tableWrap}>
                 <table className={s.table}>
                     <thead>
                         <tr>
@@ -175,8 +176,7 @@ export default function ManageEvents() {
                             <th>Title & Date</th>
                             <th>Location</th>
                             <th>Category</th>
-                            <th>Registrations</th>
-                            <th>Action</th>
+                            <th style={{ textAlign: 'right', paddingRight: '40px' }}>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -202,11 +202,11 @@ export default function ManageEvents() {
                                         {ev.category === "UPCOMING" ? "Upcoming" : ev.category === "REUNION" ? "Reunion" : "Quick Note"}
                                     </span>
                                 </td>
-                                <td>
-                                    <div style={{ display: "flex", gap: "8px" }}>
-                                        <button className={s.btnPrimary} style={{ padding: "6px 12px", fontSize: "12px" }} onClick={() => handleEdit(ev)}>Edit</button>
-                                        <button className={s.btnSecondary} style={{ padding: "6px 12px", fontSize: "12px" }} onClick={() => handleViewParticipants(ev)}>👥 Participants ({ev.registrationCount || 0})</button>
-                                        <button className={s.btnDanger} style={{ padding: "6px 12px", fontSize: "12px" }} onClick={() => deleteEvent(ev.id)}>Delete</button>
+                                <td style={{ textAlign: 'right' }}>
+                                    <div className={s.tdActions} style={{ justifyContent: 'flex-end', paddingRight: '20px' }}>
+                                        <button className={`${s.btnPrimary} ${s.btnSmall}`} onClick={() => handleEdit(ev)}>Edit</button>
+                                        <button className={`${s.btnSecondary} ${s.btnSmall}`} onClick={() => handleViewParticipants(ev)}>👥 Participants ({ev.registrationCount || 0})</button>
+                                        <button className={`${s.btnDanger} ${s.btnSmall}`} onClick={() => handleDelete(ev.id)}>Delete</button>
                                     </div>
                                 </td>
                             </tr>
@@ -216,7 +216,7 @@ export default function ManageEvents() {
                         )}
                     </tbody>
                 </table>
-            </div>
+            </DraggableBox>
 
             {showParticipants && selEvent && (
                 <div className="modal-overlay" style={{
@@ -264,7 +264,7 @@ export default function ManageEvents() {
                                 </form>
                             ) : null}
 
-                            <div className={s.tableWrap}>
+                            <DraggableBox className={s.tableWrap}>
                                 <table className={s.table}>
                                     <thead>
                                         <tr><th>Name</th><th>Email</th><th>Phone</th><th>Comments</th><th>Action</th></tr>
@@ -277,9 +277,9 @@ export default function ManageEvents() {
                                                 <td>{r.phone}</td>
                                                 <td><div style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.comments}>{r.comments || "—"}</div></td>
                                                 <td>
-                                                    <div style={{ display: "flex", gap: "5px" }}>
-                                                        <button className={s.btnPrimary} style={{ padding: "4px 8px", fontSize: "11px" }} onClick={() => handleEditReg(r)}>Edit</button>
-                                                        <button className={s.btnDanger} style={{ padding: "4px 8px", fontSize: "11px" }} onClick={async () => { if (await confirm("Remove Registration?", "Delete this student's registration for this event?")) deleteEventRegistration(r.id); }}>Remove</button>
+                                                    <div className={s.tdActions}>
+                                                        <button className={`${s.btnPrimary} ${s.btnSmall}`} style={{ padding: "4px 10px" }} onClick={() => handleEditReg(r)}>Edit</button>
+                                                        <button className={`${s.btnDanger} ${s.btnSmall}`} style={{ padding: "4px 10px" }} onClick={async () => { if (await confirm("Remove Registration?", "Delete this student's registration for this event?")) deleteEventRegistration(r.id); }}>Remove</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -287,7 +287,7 @@ export default function ManageEvents() {
                                         {!eventRegistrations.length && <tr><td colSpan="5" style={{ textAlign: "center", padding: 20 }}>No participants registered yet.</td></tr>}
                                     </tbody>
                                 </table>
-                            </div>
+                            </DraggableBox>
                         </div>
                     </div>
                 </div>

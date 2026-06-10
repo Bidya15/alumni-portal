@@ -176,17 +176,85 @@
     font-weight: 500;
 }
 
+/* ─── Carousel Styles ──────────────────────────────────── */
+.carouselWrapper {
+    position: relative;
+    margin-bottom: 24px;
+    padding: 0 45px;
+}
+
+.scrollBtn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    color: var(--gray-700);
+    font-size: 18px;
+}
+
+.scrollBtn:hover {
+    background: var(--gray-50);
+    color: var(--indigo);
+    box-shadow: var(--shadow-lg);
+}
+
+.scrollBtnLeft { left: 0; }
+.scrollBtnRight { right: 0; }
+
+.alumniGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
 /* Responsive */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .hubContainer {
-        padding: 20px;
+        padding: 16px;
     }
 
     .hubTitle {
-        font-size: 28px;
+        font-size: 26px;
+    }
+
+    .hubSubtitle {
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+
+    .carouselWrapper {
+        padding: 0;
+    }
+
+    .scrollBtn {
+        display: none;
+    }
+
+    .alumniGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .sectionHeader {
+        padding-left: 14px;
+        margin-bottom: 20px;
     }
 
     .sectionTitle {
-        font-size: 20px;
+        font-size: 19px;
     }
-}
+
+    .unifiedGrid {
+        grid-template-columns: 1fr;
+    }
+}

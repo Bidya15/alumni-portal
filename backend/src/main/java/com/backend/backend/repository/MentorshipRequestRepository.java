@@ -10,4 +10,8 @@ public interface MentorshipRequestRepository extends JpaRepository<MentorshipReq
     List<MentorshipRequest> findByMenteeId(Long menteeId);
 
     boolean existsByMenteeIdAndPostId(Long menteeId, Long postId);
+
+    List<MentorshipRequest> findByPostUserId(Long postUserId);
+
+    List<MentorshipRequest> findByPostId(Long postId);
 }

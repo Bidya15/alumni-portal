@@ -2,6 +2,8 @@ package com.backend.backend.service;
 
 import com.backend.backend.model.Post;
 import com.backend.backend.model.User;
+import com.backend.backend.repository.CareerRequestRepository;
+import com.backend.backend.repository.MentorshipRequestRepository;
 import com.backend.backend.repository.PostRepository;
 import com.backend.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CareerRequestRepository careerRequestRepository;
+    private final MentorshipRequestRepository mentorshipRequestRepository;
 
     public Post createPost(Post post) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -28,6 +32,14 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    public List<Post> getAllPostsByDepartment(String department) {
+        if (department == null) return getAllPosts();
+        return postRepository.findAll().stream()
+                .filter(p -> p.getUser() != null && department.equals(p.getUser().getDepartment()))
+                .toList();
+    }
+
+    @org.springframework.transaction.annotation.Transactional
     public void deletePost(Long id, String email) {
         Post post = postRepository.findById(id).orElseThrow();
         User requester = userRepository.findByEmail(email).orElseThrow();
@@ -41,6 +53,10 @@ public class PostService {
         if (!isAuthor && !isSuper && !isDeptAdmin) {
             throw new RuntimeException("Not authorized to delete this post");
         }
+
+        careerRequestRepository.deleteAll(careerRequestRepository.findByPostId(id));
+        mentorshipRequestRepository.deleteAll(mentorshipRequestRepository.findByPostId(id));
+
         postRepository.deleteById(id);
     }
 

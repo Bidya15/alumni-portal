@@ -27,7 +27,7 @@ public class OtpService {
         // Upsert logic: Update existing record or create new one
         UserOtp userOtp = userOtpRepository.findByEmail(email)
                 .orElse(new UserOtp());
-        
+
         userOtp.setEmail(email);
         userOtp.setOtp(encodedOtp);
         userOtp.setExpiryTime(expiryTime);

@@ -670,7 +670,7 @@
 
 /* ── Section Layouts ──────────────────────────────────── */
 .homeSection {
-    padding: 110px 24px;
+    padding: 60px 24px;
     background:
         linear-gradient(180deg, var(--home-bg), var(--home-surface)),
         radial-gradient(ellipse 80% 60% at 20% 50%, rgba(6, 182, 212, 0.07) 0%, transparent 60%);
@@ -687,7 +687,7 @@
 }
 
 .homeSectionAlt {
-    padding: 110px 24px;
+    padding: 60px 24px;
     background:
         linear-gradient(180deg, var(--home-surface), var(--home-surface2)),
         radial-gradient(ellipse 80% 60% at 80% 50%, rgba(124, 58, 237, 0.08) 0%, transparent 60%);
@@ -814,7 +814,7 @@
 /* Fixed card widths inside carousel */
 .carouselTrack .newsCard,
 .carouselTrackDrag .newsCard {
-    min-width: 340px;
+    min-width: 260px;
     flex-shrink: 0;
 }
 
@@ -1039,7 +1039,7 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px 0 70px;
+    padding: 20px 0 40px;
     cursor: grab;
     user-select: none;
 }
@@ -1082,11 +1082,11 @@
 
 /* News card widths in slider */
 .newsCardActive {
-    width: 440px;
+    width: 320px;
 }
 
 .newsCardSide {
-    width: 340px;
+    width: 260px;
 }
 
 /* Alumni card widths in slider */
@@ -1181,7 +1181,7 @@
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 28px;
 }
 
@@ -1218,7 +1218,7 @@
 }
 
 .newsImageWrapper {
-    height: 220px;
+    height: 150px;
     overflow: hidden;
     position: relative;
 }
@@ -1250,7 +1250,7 @@
 }
 
 .newsContent {
-    padding: 24px 26px 28px;
+    padding: 14px 16px 18px;
 }
 
 .newsDate {
@@ -1263,7 +1263,7 @@
 
 .newsTitle {
     color: #0f172a;
-    font-size: 19px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1.45;
     margin-bottom: 12px;
@@ -1271,7 +1271,7 @@
 
 .newsExcerpt {
     color: #475569;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.65;
 }
 
@@ -2002,8 +2002,17 @@
 
 @media (max-width: 480px) {
     .heroSection {
-        padding-top: 120px;
-        padding-bottom: 80px;
+        padding-top: 100px;
+        padding-bottom: 60px;
+    }
+
+    .homeSection, 
+    .homeSectionAlt {
+        padding: 40px 16px;
+    }
+
+    .sectionTitle {
+        font-size: 28px;
     }
 
     .heroStats {
@@ -2026,6 +2035,11 @@
         width: 100%;
         max-width: 300px;
         margin: 0 auto;
+    }
+
+    .directoryInner {
+        padding: 20px 16px;
+        margin: 0 12px;
     }
 }
 

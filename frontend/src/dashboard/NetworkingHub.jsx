@@ -2,7 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useApp } from "../context/AppContext";
 import styles from "./NetworkingHub.module.css";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { AlumniCard } from "./Alumni";
 
 /**
  * NetworkingHub: Facilitates professional connections and mentorship.
@@ -10,18 +11,46 @@ import { useState } from "react";
  */
 
 export default function NetworkingHub() {
-    const { notify, users, posts, sendConnectionRequest, currentUser, connectedAlumniIds = [], sendMentorshipRequest, mentorshipRequests = [] } = useApp();
+    const { notify, users, posts, sendConnectionRequest, currentUser, connections = [], sentConnections = [], sendMentorshipRequest, mentorshipRequests = [] } = useApp();
 
     const [reqModal, setReqModal] = useState(null); // { mentorId, postId, title }
     const [reqNote, setReqNote] = useState("");
 
-    // Data Filtering: Separating concerns for clarity (excluding own profile/posts and ALREADY CONNECTED ALUMNI)
+    // Search & Filter State
+    const [q, setQ] = useState("");
+    const [batch, setBatch] = useState("");
+    const [city, setCity] = useState("");
+    const [company, setComp] = useState("");
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 9;
+
+    // Data Filtering: Separating concerns for clarity (excluding own profile/posts)
     const approvedAlumni = users.filter(user =>
         user.role === "ROLE_ALUMNI" &&
         user.status === "APPROVED" &&
-        user.id !== currentUser?.id &&
-        !connectedAlumniIds.includes(user.id)
+        user.id !== currentUser?.id
     );
+
+    const filteredAlumni = approvedAlumni.filter(u => {
+        // Exclude already connected alumni
+        const isConnected = 
+            connections.some(c => c.status === "ACCEPTED" && c.sender?.id === u.id) ||
+            sentConnections.some(c => c.status === "ACCEPTED" && c.receiver?.id === u.id);
+        
+        if (isConnected) return false;
+
+        if (q && !u.name.toLowerCase().includes(q.toLowerCase()) && !u.techStack?.toLowerCase().includes(q.toLowerCase())) return false;
+        if (batch && String(u.batch) !== batch) return false;
+        if (city && u.location && !u.location.toLowerCase().includes(city.toLowerCase())) return false;
+        if (company && u.company && !u.company.toLowerCase().includes(company.toLowerCase())) return false;
+        return true;
+    });
+
+    const total = Math.max(1, Math.ceil(filteredAlumni.length / PAGE_SIZE));
+    const pg = Math.min(page, total);
+    const slice = filteredAlumni.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+    const batches = [...new Set(approvedAlumni.map(u => u.batch))].sort();
+
     const mentorshipPosts = posts.filter(post =>
         post.postType === "MENTORSHIP" &&
         post.user?.id !== currentUser?.id
@@ -30,18 +59,6 @@ export default function NetworkingHub() {
         post.postType === "WEBINAR" &&
         post.user?.id !== currentUser?.id
     );
-
-    /**
-     * Helper to handle connection requests with user feedback.
-     */
-    const handleConnect = async (alumniId, alumniName) => {
-        try {
-            await sendConnectionRequest(alumniId);
-            // AppContext handles the notification, but we could add extra logic here
-        } catch (error) {
-            notify(`Could not connect with ${alumniName}.`, "err");
-        }
-    };
 
     return (
         <div className={styles.hubContainer}>
@@ -94,36 +111,70 @@ export default function NetworkingHub() {
             <section className={styles.hubSection}>
                 <div className={styles.sectionHeader}>
                     <h2 className={styles.sectionTitle}>Global Alumni Network</h2>
-                    <p className={styles.sectionDesc}>Direct access to industry professionals for peer-to-peer networking.</p>
+                    <p className={styles.sectionDesc}>Search and connect with industry professionals for peer-to-peer networking.</p>
                 </div>
 
-                <div className={styles.unifiedGrid}>
-                    {approvedAlumni.length > 0 ? approvedAlumni.map((alumni, index) => (
-                        <motion.div
-                            key={alumni.id}
-                            className={styles.networkCard}
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                {/* Search Filters */}
+                <div className="directory-container" style={{ marginBottom: '24px' }}>
+                    <div className="filter-row">
+                        <input className="inp" placeholder="🔍 Search name or skills…" value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
+                        <input className="inp" placeholder="📍 City" value={city} onChange={e => { setCity(e.target.value); setPage(1) }} />
+                        <input className="inp" placeholder="🏢 Company" value={company} onChange={e => { setComp(e.target.value); setPage(1) }} />
+                        <select className="inp" value={batch} onChange={e => { setBatch(e.target.value); setPage(1) }}>
+                            <option value="">All Batches</option>
+                            {batches.map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                        <button className="btn btn-outline" onClick={() => { setQ(""); setBatch(""); setCity(""); setComp(""); setPage(1); }}>Reset</button>
+                    </div>
+                    <div className={styles.resultCount}>
+                        {filteredAlumni.length} alumni found
+                    </div>
+                </div>
+
+                <div className={styles.carouselWrapper}>
+                    {total > 1 && (
+                        <button 
+                            className={`${styles.scrollBtn} ${styles.scrollBtnLeft}`}
+                            style={{ visibility: pg === 1 ? 'hidden' : 'visible' }}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            title="Previous Page"
                         >
-                            <div className={styles.cardInfo}>
-                                <h3 className={styles.alumniName}>{alumni.name}</h3>
-                                <p className={styles.alumniRole}>
-                                    {alumni.designation || "Engineering Professional"}
-                                    {alumni.company ? ` @ ${alumni.company}` : ""}
-                                </p>
-                                <span className={styles.alumniLocation}>📍 {alumni.location || "Global"}</span>
-                            </div>
-                            <button
-                                className={styles.connectBtn}
-                                onClick={() => handleConnect(alumni.id, alumni.name)}
-                            >
-                                Connect
-                            </button>
-                        </motion.div>
-                    )) : (
-                        <div className={styles.emptyState}>No alumni directory data available yet.</div>
+                            ◀
+                        </button>
                     )}
+
+                    <div className={styles.alumniGrid}>
+                        {slice.length > 0 ? slice.map((alumni) => (
+                            <AlumniCard key={alumni.id} user={alumni} />
+                        )) : (
+                            <div className={styles.emptyState}>No alumni match your search criteria.</div>
+                        )}
+                    </div>
+
+                    {total > 1 && (
+                        <button 
+                            className={`${styles.scrollBtn} ${styles.scrollBtnRight}`}
+                            style={{ visibility: pg === total ? 'hidden' : 'visible' }}
+                            onClick={() => setPage(p => Math.min(total, p + 1))}
+                            title="Next Page"
+                        >
+                            ▶
+                        </button>
+                    )}
+                </div>
+
+                <div className="pager" style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
+                    {Array.from({ length: total }, (_, i) => i + 1).map(n => (
+                        <div 
+                            key={n} 
+                            onClick={() => setPage(n)}
+                            style={{ 
+                                width: '8px', height: '8px', borderRadius: '50%', 
+                                background: n === pg ? 'var(--indigo)' : 'var(--gray-300)',
+                                cursor: 'pointer'
+                            }} 
+                        />
+                    ))}
                 </div>
             </section>
 
